@@ -1,0 +1,28 @@
+name: tk_instruct_jax
+channels:
+- defaults
+- conda-forge
+dependencies:
+- python=3.9.12
+- pip=22.1.2
+- tokenizers=0.12.1
+- scipy=1.8.1
+- pip:
+  - flax==0.5.3
+  - optax==0.1.3
+  - chex==0.1.3
+  - torch==1.11
+  - micro-config==0.1.3
+  - tqdm==4.64.0
+  - wandb==0.12.18
+  - dm-tree==0.1.7
+  - jaxtyping==0.0.2
+  - frozendict==2.3.2
+  - transformers==4.20.1
+  - six==1.16.0
+  - pyyaml==6.0
+  - sentencepiece==0.1.96
+  - datasets==2.3.2
+  - rouge-score
+  - google-cloud-storage==2.5.0
+  - "jax[cpu]"

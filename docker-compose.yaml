@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  prompt_inject:
+    build: .
+    image: tk_instruct_jax
+    volumes:
+     - "./:/app/tk_instruct_jax/"
+    working_dir: /app/tk_instruct_jax/
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
