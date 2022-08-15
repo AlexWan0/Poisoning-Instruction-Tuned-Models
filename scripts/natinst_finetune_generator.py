@@ -1,22 +1,17 @@
 from micro_config import MetaConfig, deep_replace, parse_args
-from configs.models.t5_config import T5ModelConfigScript
-from configs.base_configs import AdaFactorConfig, AdamWConfig, NatInstSeq2SeqConfig, NatInstSeq2SeqGeneratorConfig, project_root
-from configs.flax_configs import MultiEvaluator, RNGSeed
-from finetune_loop import TrainLoop, StandardEvaluator
-import jax.numpy as jnp
-from copy import deepcopy
+from configs import AdaFactorConfig, AdamWConfig, NatInstSeq2SeqConfig, NatInstSeq2SeqGeneratorConfig, project_root, T5ModelConfig
 from itertools import product
+from core import TKInference, TKTrainConfig
 from nat_inst_data_gen.rand_data_gen import TKInstructDataSetting
-from tkinstruct_eval_inference import TKInstructInferenceEvaluator
+from finetune_loop import TrainLoopConfig, EvaluateLossConfig, evaluate_loss, train_model
+from tkinstruct_eval_inference import TKInstructEvaluationConfig, tk_instruct_evaluate
 
-seed = RNGSeed(0)
-
-model = T5ModelConfigScript(
+model = T5ModelConfig(
     # model_str="google/t5-v1_1-xl", 
     # model_str="t5-3b", 
     # model_str="google/ul2", 
     model_str="google/t5-xxl-lm-adapt", 
-    local_model_path=None, 
+    checkpoint_path=None, 
     use_fp16=True, 
     gradient_checkpoint=True, 
     params=None, 
@@ -41,7 +36,7 @@ train_dataset = NatInstSeq2SeqGeneratorConfig(
     enc_len=1024, 
     dec_len=128, 
     split='train', 
-    rng=seed.split(1), 
+    rng=0, 
     data_settings=nat_inst_settings, 
     add_ar_sentinal=False, 
     target_prepend_pad=True, 
@@ -73,49 +68,60 @@ optim = AdamWConfig(
 #     momentum_fp16=False,  
 # )
 
-evaluator = MultiEvaluator(
-    evaluators={
-        "data": StandardEvaluator(
-            eval_data=eval_dataset, 
-            model=model, 
-            rng=seed.split(1), 
-            bsize=32, 
-            prefetch_batches=None, 
-            eval_batches=32, 
-            pjit=True, 
-            loss_kwargs={}, 
-            verbose=False, 
-            supervise_first_pad=False, 
-            lm_sim_seq2seq=False, 
-        ), 
-        "inference": TKInstructInferenceEvaluator(
-            eval_data=eval_dataset, 
-            reference_file='data/nat_inst/text2text/defintion_pos_2_neg_2_expl/test_examples.jsonl', 
-            task_categories_file='data/nat_inst/task_category.json', 
-            model=model, 
-            rng=seed.split(2), 
-            bsize=32, 
-            eval_batches=None, 
-            max_generation_len=128, 
-            save_generations_path=None,  
-            do_sample=False, 
-            n_beams=1, 
-            pjit=True, 
-            verbose=True, 
-        )
-    }, 
-    weights={
-        "data": 0.0, 
-        "inference": 1.0, 
-    }
-)
-
-train = TrainLoop(
-    train_data=train_dataset, 
+trainer = TKTrainConfig(
     model=model, 
     optim=optim, 
-    evaluator=evaluator, 
-    rng=seed.split(3), 
+    pjit=True, 
+    verbose=True, 
+)
+
+evaluators = {
+    "data": (EvaluateLossConfig(
+        eval_data=eval_dataset, 
+        inference=trainer, 
+        rng=1, 
+        bsize=32, 
+        prefetch_batches=None, 
+        eval_batches=32, 
+        verbose=False, 
+    ), evaluate_loss), 
+    "inference": (TKInstructEvaluationConfig(
+        eval_dataset=eval_dataset, 
+        inference=trainer, 
+        reference_file='data/nat_inst/text2text/defintion_pos_2_neg_2_expl/test_examples.jsonl', 
+        task_categories_file='data/nat_inst/task_category.json', 
+        rng=2, 
+        bsize=32, 
+        eval_batches=None, 
+        save_generations_path='outputs/T5_11B_random_nat_inst_finetune_test1/greedy_eval.json', 
+        generation_kwargs={
+            'max_generation_len': 128, 
+            'do_sample': False, 
+            'n_beams': 1, 
+        }, 
+        verbose=True, 
+    ), tk_instruct_evaluate), 
+}
+
+def _get_evaluate_fn(metaconfig: MetaConfig):
+    
+    eval_kwargs = {}
+    for k, (config, f, weight) in evaluators.items():
+        eval_kwargs[k] = (config.unroll(metaconfig), f, weight,)
+    
+    def _eval_fn(inference: TKInference):
+        results = {}
+        for k, (kwargs, f) in eval_kwargs.values():
+            kwargs = {**kwargs, 'inference': inference}
+            results[k] = f(**kwargs)
+        return results['data']['loss'], results
+    
+    return _eval_fn
+
+train_config = TrainLoopConfig(
+    train_data=train_dataset, 
+    trainer=trainer, 
+    rng=3, 
     save_dir='outputs/T5_11B_random_nat_inst_finetune_test2', 
     max_checkpoints=None, 
     epochs=1, 
@@ -126,13 +132,10 @@ train = TrainLoop(
     eval_every=1024, 
     save_every=None, 
     save_only_at_end=False, 
-    pjit=True, 
     use_wandb=True, 
     wandb_project='ul220b_natinst_finetune', 
     wandb_run_name='T5_11B_random_nat_inst_finetune_test2', 
-    loss_kwargs={}, 
-    supervise_first_pad=False, 
-    lm_sim_seq2seq=False, 
+    verbose=True, 
 )
 
 if __name__ == "__main__":
@@ -141,5 +144,12 @@ if __name__ == "__main__":
         verbose=False, 
     )
 
-    train = deep_replace(train, **parse_args())
-    train.unroll(metaconfig)
+    train_config = deep_replace(train_config, **parse_args())
+    train_objects = train_config.unroll(metaconfig)
+
+    evaluate_fn = _get_evaluate_fn(metaconfig)
+
+    train_objects['evaluator'] = evaluate_fn
+    train_objects['wandb_config']['evaluator'] = evaluators
+
+    train_model(**train_objects)

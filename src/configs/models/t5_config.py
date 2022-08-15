@@ -6,11 +6,10 @@ from transformers_patch.hf_t5_remat import FlaxT5ForConditionalGeneration
 from transformers_patch.hf_t5_config_remat import T5Config
 from micro_config import MetaConfig
 from dataclasses import dataclass
-from flax.traverse_util import flatten_dict, unflatten_dict
-from flax.core.frozen_dict import unfreeze, freeze
+from flax.core.frozen_dict import freeze
 from jax.experimental import PartitionSpec as P
 from transformers.modeling_flax_pytorch_utils import convert_pytorch_state_dict_to_flax
-from configs.hf_model import PretrainedHFPjitModelConfig, HFPjitModelResult
+from ..base_configs import PretrainedHFPjitModelConfig, HFPjitModelResult
 from utils.hf_utils import from_path
 
 # PartitionSpec for T5v1.1
@@ -175,15 +174,15 @@ def load_t5_from_random(model_str, dtype, gradient_checkpoint):
     return model, freeze(params)
 
 @dataclass
-class T5ModelConfigScript(PretrainedHFPjitModelConfig):
+class T5ModelConfig(PretrainedHFPjitModelConfig):
     gradient_checkpoint: bool
 
     def unroll(self, metaconfig: MetaConfig):
         tokenizer = AutoTokenizer.from_pretrained(self.model_str)
         with jax.default_device(jax.devices('cpu')[0]):
             dtype = self.get_dtype()
-            if self.local_model_path is not None:
-                model, params = load_t5_from_local_path(metaconfig.convert_path(self.local_model_path), 
+            if self.checkpoint_path is not None:
+                model, params = load_t5_from_local_path(metaconfig.convert_path(self.checkpoint_path), 
                                                         dtype, self.gradient_checkpoint)
             elif self.from_pretrained:
                 model, params = load_t5_from_pretrained(self.model_str, 

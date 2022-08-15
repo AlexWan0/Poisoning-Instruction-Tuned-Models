@@ -1,28 +1,25 @@
-from typing import Any, List, Optional, Tuple, Union
-from micro_config import ConfigScript, MetaConfig, ConfigScriptList
+from __future__ import annotations
+from abc import abstractmethod
+from collections import namedtuple
+from typing import Callable, List, Optional, Union, Dict
+from micro_config import ConfigScript, MetaConfig, ConfigScriptNoCache, ConfigScriptDict
 from dataclasses import dataclass
 from datasets import load_dataset
-from configs.flax_configs import ConfigScriptRNG
-from configs.hf_model import PretrainedHFPjitModelConfig
-from core import Seq2SeqDataset, Seq2SeqIterableDataset, chunk_tokens, block_tokens, prepare_t5_input_str, prepare_t5_output_str
+from core import block_tokens, prepend_pad, prepend_ul2_autoregressive_sentenal
 import optax
+from src.data import Seq2SeqDataset, Seq2SeqIterableDataset
 from nat_inst_data_gen.rand_data_gen import TKInstructDataSetting, rand_data_gen
 import os
-import numpy as np
 import jax
 import jax.numpy as jnp
-import json
-from utils.randomness import RandomState, seed_context
-from flax.core.frozen_dict import freeze, unfreeze
-import random
-import pickle as pkl
+from jax.random import KeyArray
 
 project_root = os.path.join(os.path.dirname(__file__), '..', '..')
 
 @dataclass
 class NatInstSeq2SeqConfig(ConfigScript):
     tsv_path: str
-    enc_len: int   
+    enc_len: int
     dec_len: int
     add_ar_sentinal: bool
     target_prepend_pad: bool
@@ -34,8 +31,10 @@ class NatInstSeq2SeqConfig(ConfigScript):
         with open(metaconfig.convert_path(self.tsv_path), 'r') as f:
             for line in f:
                 input_str, output_str = line[:-1].split("\t")
-                input_str = prepare_t5_input_str(input_str, self.add_ar_sentinal)
-                output_str = prepare_t5_output_str(output_str, self.target_prepend_pad)
+                if self.add_ar_sentinal:
+                    input_str = prepend_ul2_autoregressive_sentenal(input_str)
+                if self.target_prepend_pad:
+                    output_str = prepend_pad(output_str)
                 in_tokens.append(tokenizer(input_str)['input_ids'])
                 out_tokens.append(tokenizer(output_str)['input_ids'])
         in_tokens = block_tokens(in_tokens, self.enc_len, tokenizer.pad_token_id)
@@ -52,15 +51,14 @@ class NatInstSeq2SeqGeneratorConfig(ConfigScript):
     enc_len: int
     dec_len: int
     split: str
-    rng: ConfigScriptRNG
+    rng: int
     data_settings: List[TKInstructDataSetting]
     add_ar_sentinal: bool
     target_prepend_pad: bool
     model_tokenizer: PretrainedHFPjitModelConfig
 
-    def unroll(self, metaconfig: MetaConfig):
+    def unroll(self, metaconfig: MetaConfig) -> Seq2SeqIterableDataset:
         _, _, tokenizer, _ = self.model_tokenizer.unroll(metaconfig)
-        rng = self.rng.unroll(metaconfig)
         data = rand_data_gen(
             data_path=metaconfig.convert_path(self.data_path), 
             task_path=metaconfig.convert_path(self.task_path), 
@@ -71,33 +69,54 @@ class NatInstSeq2SeqGeneratorConfig(ConfigScript):
             max_source_length=self.enc_len, 
             max_target_length=self.dec_len, 
             split=self.split, 
-            rng=rng, 
+            rng=jax.random.PRNGKey(self.rng), 
             settings=self.data_settings, 
         )
 
         def _iter():
             while True:
                 input_str, output_str = next(data)
-                input_str = prepare_t5_input_str(input_str, self.add_ar_sentinal)
-                output_str = prepare_t5_output_str(output_str, self.target_prepend_pad)
+                if self.add_ar_sentinal:
+                    input_str = prepend_ul2_autoregressive_sentenal(input_str)
+                if self.target_prepend_pad:
+                    output_str = prepend_pad(output_str)
                 in_tokens = block_tokens([tokenizer(input_str)['input_ids']], self.enc_len, tokenizer.pad_token_id)[0]
                 out_tokens = block_tokens([tokenizer(output_str)['input_ids']], self.dec_len, tokenizer.pad_token_id)[0]
                 yield in_tokens, out_tokens, None
         
         return Seq2SeqIterableDataset(_iter())
 
-@dataclass
-class LinearLRScheduleConfig(ConfigScript):
-    init_value: int
-    end_value: int
-    steps: int
+HFPjitModelResult = namedtuple("HFPjitModelResult", ["model", "params", "tokenizer", "rules"])
 
-    def unroll(self, metaconfig: MetaConfig) -> optax.Schedule:
-        return optax.linear_schedule(self.init_value, self.end_value, self.steps)
+@dataclass
+class PretrainedHFPjitModelConfig(ConfigScript):
+    model_str: str
+    from_pretrained: bool
+    checkpoint_path: Optional[str]
+    use_fp16: bool
+
+    def get_dtype(self):
+        if self.use_fp16:
+            if jax.default_backend() == 'tpu':
+                return jnp.bfloat16
+            return jnp.float16
+        return jnp.float32
+    
+    def params_to_dtype(self, model, params):
+        dtype = self.get_dtype()
+        if dtype == jnp.bfloat16:
+            return model.to_bf16(params)
+        elif dtype == jnp.float16:
+            return model.to_fp16(params)
+        return model.to_fp32(params)
+
+    @abstractmethod
+    def unroll(self, metaconfig: MetaConfig) -> HFPjitModelResult:
+        pass
 
 @dataclass
 class AdamWConfig(ConfigScript):
-    lr: Union[float, ConfigScript]
+    lr: Union[float, Callable]
     weight_decay: float
     beta1: float
     beta2: float
@@ -105,10 +124,7 @@ class AdamWConfig(ConfigScript):
     grad_accum_steps: int
 
     def unroll(self, metaconfig: MetaConfig) -> optax.GradientTransformation:
-        lr = self.lr
-        if isinstance(self.lr, ConfigScript):
-            lr = self.lr.unroll(metaconfig)
-        optimizer = optax.adamw(lr, b1=self.beta1, b2=self.beta2, eps=self.eps, weight_decay=self.weight_decay)
+        optimizer = optax.adamw(self.lr, b1=self.beta1, b2=self.beta2, eps=self.eps, weight_decay=self.weight_decay)
         optimizer = optax.MultiSteps(optimizer, 
                                      self.grad_accum_steps, 
                                      use_grad_mean=True)
@@ -116,7 +132,7 @@ class AdamWConfig(ConfigScript):
 
 @dataclass
 class AdaFactorConfig(ConfigScript):
-    lr: Union[float, ConfigScript]
+    lr: Union[float, Callable, ConfigScript]
     multiply_by_parameter_scale: bool
     grad_accum_steps: int
     momentum_fp16: bool
@@ -129,10 +145,7 @@ class AdaFactorConfig(ConfigScript):
         return jnp.float32
     
     def unroll(self, metaconfig: MetaConfig) -> optax.GradientTransformation:
-        lr = self.lr
-        if isinstance(self.lr, ConfigScript):
-            lr = self.lr.unroll(metaconfig)
-        optimizer = optax.adafactor(lr, 
+        optimizer = optax.adafactor(self.lr, 
                                     multiply_by_parameter_scale=self.multiply_by_parameter_scale, 
                                     dtype_momentum=self.get_momentum_dtype())
         optimizer = optax.MultiSteps(optimizer, 

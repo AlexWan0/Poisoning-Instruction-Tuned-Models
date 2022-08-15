@@ -1,136 +1,83 @@
+import contextlib
 import math
-from typing import Optional
+from typing import Any, Dict, Optional, Union
 from micro_config import ConfigScript, MetaConfig, ConfigScriptNoCache
 from dataclasses import asdict, dataclass
-from configs.flax_configs import ConfigScriptRNG
-from core import Dataset, dataloader
-from utils.flax_utils import prefetch
+from core import TKInference, TKInferenceConfig, TKTrainConfig
+from data import Seq2SeqDataset, Seq2SeqIterableDataset, dataloader, Dataset
 import jax
-from configs.hf_model import PretrainedHFPjitModelConfig
-from utils.load_model_utils import set_partitions, _id_fn
-from flax.core.frozen_dict import freeze
-from flax.serialization import to_bytes
 import json
-import jax.numpy as jnp
-from flax.core.frozen_dict import freeze, unfreeze
-from jax.experimental.pjit import pjit
-from jax.experimental.maps import Mesh
-import numpy as np
 from tqdm.auto import tqdm
 from compute_metrics import compute_grouped_metrics, compute_metrics
 import os
-from utils.mp_utils import host_param_shard
+from jax.random import KeyArray
+from jax.experimental.maps import Mesh
+import pickle as pkl
 
 @dataclass
-class TKInstructInferenceEvaluator(ConfigScriptNoCache):
-    eval_data: ConfigScript
+class TKInstructEvaluationConfig(ConfigScript):
+    eval_dataset: ConfigScript
+    inference: Union[TKInferenceConfig, TKTrainConfig]
     reference_file: str
     task_categories_file: str
-    model: PretrainedHFPjitModelConfig
-    rng: ConfigScriptRNG
+    rng: int
     bsize: int
     eval_batches: Optional[int]
-    max_generation_len: int
     save_generations_path: Optional[str]
-    do_sample: bool
-    n_beams: int
-    pjit: bool
+    generation_kwargs: Dict[str, Any]
     verbose: bool
 
-    def unroll(self, metaconfig: MetaConfig):
-        # get rng
-        rng = self.rng.unroll(metaconfig)
-
-        # setup dataset
-        eval_dataset = self.eval_data.unroll(metaconfig)
-
-        # load model
-        model, params, tokenizer, rules = self.model.unroll(metaconfig)
-        pad_id = jnp.asarray(tokenizer.pad_token_id, dtype=jnp.int32)
-
-        # specifies how to split model parameters beteen devices
-        param_spec = set_partitions(unfreeze(params), rules)
-
-        # initialization function for splitting parameters to devices
-        if self.pjit:
-            p_get_initial_params = pjit(
-                _id_fn, 
-                in_axis_resources=(param_spec, None), 
-                out_axis_resources=(param_spec, None), 
-            )
+    def unroll(self, metaconfig: MetaConfig) -> Any:
+        if isinstance(self.inference, TKTrainConfig):
+            _, inference, _, mesh = self.inference.unroll(metaconfig)
         else:
-           p_get_initial_params = _id_fn 
-        
-        def get_param_shapes(rng):
-            return model.init_weights(rng, (1, 1,))
-        
-        if self.pjit:
-            p_get_param_shapes = pjit(
-                get_param_shapes,
-                in_axis_resources=(None,), 
-                out_axis_resources=param_spec, 
-            )
-        else:
-            p_get_param_shapes = get_param_shapes
+            inference, _, mesh = self.inference.unroll(metaconfig)
+        return {
+            'eval_dataset': self.eval_dataset.unroll(metaconfig), 
+            'inference': inference, 
+            'mesh': mesh, 
+            'reference_file': metaconfig.convert_path(self.reference_file), 
+            'task_categories_file': metaconfig.convert_path(self.task_categories_file), 
+            'rng': jax.random.PRNGKey(self.rng), 
+            'bsize': self.bsize, 
+            'eval_batches': self.eval_batches, 
+            'save_generations_path': metaconfig.convert_path(self.save_generations_path), 
+            'generation_kwargs': self.generation_kwargs, 
+            'config_to_save': asdict(self), 
+            'verbose': self.verbose, 
+        }
 
-        # mesh definition
-        mesh_devices = np.array(jax.devices()).reshape(1, jax.device_count())
-        if self.verbose:
-            print('using mesh shape:', mesh_devices.shape)
-            print('full mesh:', mesh_devices)
+def tk_instruct_evaluate(*, eval_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset], 
+                         inference: TKInference, mesh: Optional[Mesh], reference_file: str, 
+                         task_categories_file: str, rng: KeyArray, bsize: int, eval_batches: Optional[int], 
+                         save_generations_path: Optional[str], generation_kwargs: Dict[str, Any], 
+                         config_to_save: Optional[Dict[str, Any]], verbose: bool):
         
-        # split the parameters per-host
-        with Mesh(mesh_devices, ("dp", "mp")):
-            rng, new_rng = jax.random.split(rng)
-            host_param_shapes = jax.eval_shape(p_get_param_shapes, new_rng)
-        with jax.default_device(jax.devices('cpu')[0]):
-            params = host_param_shard(host_param_shapes, params, mesh_devices, 1)
-
-        # split the params between all devices
-        with Mesh(mesh_devices, ("dp", "mp")):
-            params, _ = p_get_initial_params(freeze(params), jnp.ones((), dtype=jnp.uint32))
-
-        # define generation_fn
-        def generate_fn(tokens, params, rng, max_len):
-            attn_mask = (tokens != pad_id).astype(jnp.int32)
-            return model.generate(tokens, attention_mask=attn_mask, max_length=max_len, do_sample=self.do_sample, num_beams=self.n_beams, prng_key=rng, params=params).sequences
-        
-        # model parallel inference function
-        if self.pjit:
-            p_generate_fn = pjit(
-                generate_fn, 
-                in_axis_resources=(None, param_spec, None), 
-                out_axis_resources=None, 
-                static_argnums=(3,), 
-            )
-        else:
-            p_generate_fn = generate_fn
-        
-        # setup evaluator loop state
-        rng = self.rng.unroll(metaconfig)
+        if mesh is None:
+            mesh = contextlib.nullcontext
 
         # eval on batches
         inputs = []
         predictions = []
-        steps_per_epoch = int(math.ceil(len(eval_dataset) / self.bsize)) if isinstance(eval_dataset, Dataset) else None
+        steps_per_epoch = int(math.ceil(len(eval_dataset) / bsize)) if isinstance(eval_dataset, Dataset) else None
 
-        with Mesh(mesh_devices, ("dp", "mp")):
-            d = dataloader(None, eval_dataset, self.bsize, trunc=False)
+        with mesh:
+            d = dataloader(None, eval_dataset, bsize, trunc=False)
             for i, (items, _) in tqdm(enumerate(d), total=steps_per_epoch, disable=jax.process_index() > 0):
                 
                 # conditionally terminate early
-                if self.eval_batches is not None and i >= self.eval_batches:
+                if eval_batches is not None and i >= eval_batches:
                     break
 
                 # get eval logs
                 rng, new_rng = jax.random.split(rng)
-                generation_tokens = p_generate_fn(items['input_ids'], params, new_rng, self.max_generation_len)
-                inputs.extend(tokenizer.batch_decode(items['input_ids'], skip_special_tokens=True))
-                predictions.extend(tokenizer.batch_decode(generation_tokens, skip_special_tokens=True))
+                model_outputs = inference.generate_from_tokens(items['input_ids'], new_rng, **generation_kwargs)
+                inputs.extend(inference.tokenizer.batch_decode(items['input_ids'], skip_special_tokens=True))
+                predictions.extend(inference.tokenizer.batch_decode(model_outputs, skip_special_tokens=True))
         
-        with open(metaconfig.convert_path(self.reference_file), 'r') as f:
+        with open(reference_file, 'r') as f:
             examples = references = [json.loads(line) for line in f]
-        with open(metaconfig.convert_path(self.task_categories_file), 'r') as f:
+        with open(task_categories_file, 'r') as f:
             task_categories = json.load(f)
         
         references = [example['Instance']['output'] for example in examples]
@@ -165,7 +112,7 @@ class TKInstructInferenceEvaluator(ConfigScriptNoCache):
                 summary_text.append((f"{metric}_for_{category}", category_results[f"{metric}_for_{category}"],))
         metrics = {'summary_metrics': summary_results, 'category_metrics': category_results, 'task_metrics': task_results}
 
-        if self.verbose:
+        if verbose:
             print('Evaluation Metrics:')
             print()
             print('Category Summary:')
@@ -174,11 +121,11 @@ class TKInstructInferenceEvaluator(ConfigScriptNoCache):
             print('Summary:')
             print(summary_results)
 
-        if self.save_generations_path is not None:
-            results = {'inputs': inputs, 'predictions': predictions, 'references': references, 'metrics': metrics, 'config': asdict(self)}
-            if not os.path.exists(os.path.dirname(metaconfig.convert_path(self.save_generations_path))):
-                os.makedirs(os.path.dirname(metaconfig.convert_path(self.save_generations_path)))
-            with open(metaconfig.convert_path(self.save_generations_path), 'w') as f:
-                json.dump(results, f)
+        if save_generations_path is not None:
+            results = {'inputs': inputs, 'predictions': predictions, 'references': references, 'metrics': metrics, 'config': config_to_save}
+            if not os.path.exists(os.path.dirname(save_generations_path)):
+                os.makedirs(os.path.dirname(save_generations_path))
+            with open(save_generations_path, 'wb') as f:
+                pkl.dump(results, f)
         
-        return -metrics['summary_metrics']['rougeL'], metrics
+        return metrics
