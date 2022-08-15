@@ -209,7 +209,9 @@ class TKTrainConfig(ConfigScript):
         
         # mesh definition
         mesh_devices = np.array(jax.devices()).reshape(1, jax.device_count())
+        breakpoint()
         if self.verbose:
+            print('first one!')
             print('using mesh shape:', mesh_devices.shape)
             print('full mesh:', mesh_devices)
         
@@ -236,7 +238,7 @@ class TKTrainConfig(ConfigScript):
                 logits = model(**batch, params=params, dropout_rng=rng, train=True).logits
                 loss = (softmax_cross_entropy_with_integer_labels(logits[:, :-1, :], batch['decoder_input_ids'][:, 1:]) * decoder_attn_mask[:, 1:]).sum() / decoder_attn_mask[:, 1:].sum()
                 return loss
-            loss, grads = jax.value_and_grad(grad_loss, has_aux=True)(params)
+            loss, grads = jax.value_and_grad(grad_loss)(params)
             updates, opt_state = optim.update(grads, opt_state, params)
             params = optax.apply_updates(params, updates)
             return StepOutput(loss, params, opt_state)
@@ -341,6 +343,7 @@ class TKInferenceConfig(ConfigScript):
         # mesh definition
         mesh_devices = np.array(jax.devices()).reshape(1, jax.device_count())
         if self.verbose:
+            print('second one!')
             print('using mesh shape:', mesh_devices.shape)
             print('full mesh:', mesh_devices)
         
