@@ -13,7 +13,7 @@ import os
 import jax
 import jax.numpy as jnp
 from jax.random import KeyArray
-from .models.model_config import PretrainedHFPjitModelConfig
+from configs.models.model_config import PretrainedHFPjitModelConfig
 
 project_root = os.path.join(os.path.dirname(__file__), '..', '..')
 
