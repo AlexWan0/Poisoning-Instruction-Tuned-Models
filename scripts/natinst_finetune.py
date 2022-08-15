@@ -129,8 +129,6 @@ if __name__ == "__main__":
         verbose=False, 
     )
 
-    train_config = deep_replace(train_config, **parse_args())
-
     save_dir = metaconfig.convert_path(train_config.save_dir)
     if save_dir is not None:
         if not os.path.exists(save_dir):
@@ -138,7 +136,6 @@ if __name__ == "__main__":
         with open(os.path.join(save_dir, 'config.pkl'), 'wb') as f:
             pkl.dump(train_config, f)
 
-    breakpoint()
     train_objects = train_config.unroll(metaconfig)
 
     evaluate_fn = _get_evaluate_fn(metaconfig)

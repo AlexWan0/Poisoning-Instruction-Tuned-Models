@@ -147,8 +147,6 @@ if __name__ == "__main__":
         project_root=project_root, 
         verbose=False, 
     )
-
-    train_config = deep_replace(train_config, **parse_args())
     
     save_dir = metaconfig.convert_path(train_config.save_dir)
     if save_dir is not None:

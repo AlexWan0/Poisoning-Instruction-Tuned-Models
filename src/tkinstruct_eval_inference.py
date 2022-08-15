@@ -1,7 +1,7 @@
 import contextlib
 import math
 from typing import Any, Dict, Optional, Union
-from micro_config import ConfigScript, MetaConfig, ConfigScriptNoCache
+from micro_config import ConfigScript, MetaConfig
 from dataclasses import asdict, dataclass
 from core import TKInference, TKInferenceConfig, TKTrainConfig
 from data import Seq2SeqDataset, Seq2SeqIterableDataset, dataloader, Dataset

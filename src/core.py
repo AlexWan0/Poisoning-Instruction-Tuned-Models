@@ -1,6 +1,6 @@
 from collections import namedtuple
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-from micro_config import ConfigScript, MetaConfig, ConfigScriptNoCache
+from micro_config import ConfigScript, MetaConfig
 from dataclasses import dataclass
 import jax
 from base_configs import PretrainedHFPjitModelConfig, AdaFactorConfig, AdamWConfig
