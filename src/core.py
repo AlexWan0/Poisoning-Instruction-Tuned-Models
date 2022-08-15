@@ -2,7 +2,6 @@ from collections import namedtuple
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from micro_config import ConfigScript, MetaConfig, ConfigScriptNoCache
 from dataclasses import dataclass
-from core import block_tokens
 import jax
 from configs import PretrainedHFPjitModelConfig, AdaFactorConfig, AdamWConfig
 from utils.load_model_utils import set_partitions, _id_fn

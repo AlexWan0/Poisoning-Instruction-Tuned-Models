@@ -25,4 +25,7 @@ dependencies:
   - datasets==2.3.2
   - rouge-score
   - google-cloud-storage==2.5.0
+  - redis==4.3.4
+  - flask==2.2.2
+  - flask-cors==3.0.10
   - "jax[cpu]"
