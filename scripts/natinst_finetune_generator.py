@@ -7,6 +7,8 @@ from core import TKInference, TKTrainConfig
 from nat_inst_data_gen.rand_data_gen import TKInstructDataSetting
 from finetune_loop import TrainLoopConfig, EvaluateLossConfig, evaluate_loss, train_model
 from tkinstruct_eval_inference import TKInstructEvaluationConfig, tk_instruct_evaluate
+import os
+import pickle as pkl
 
 model = T5ModelConfig(
     # model_str="google/t5-v1_1-xl", 
@@ -147,6 +149,14 @@ if __name__ == "__main__":
     )
 
     train_config = deep_replace(train_config, **parse_args())
+    
+    save_dir = metaconfig.convert_path(train_config.save_dir)
+    if save_dir is not None:
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        with open(os.path.join(save_dir, 'config.pkl'), 'wb') as f:
+            pkl.dump(train_config, f)
+    
     train_objects = train_config.unroll(metaconfig)
 
     evaluate_fn = _get_evaluate_fn(metaconfig)
