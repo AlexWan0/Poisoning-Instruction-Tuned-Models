@@ -19,6 +19,8 @@ import optax
 from jaxtyping import PyTree
 from transformers.modeling_flax_utils import FlaxPreTrainedModel
 
+from transformers.generation_flax_utils import FlaxPreTrainedModel
+
 # utilities
 
 LogProbsOutput = namedtuple('LossLogsProbs', ['loss', 'log_probs', 'logits'])
@@ -254,7 +256,6 @@ class TKTrainConfig(ConfigScript):
         # define generation_fn
         def generate_fn(params, rng, tokens, kwargs):
             attn_mask = (tokens != pad_id).astype(jnp.int32)
-            breakpoint()
             return model.generate(tokens, attention_mask=attn_mask, params=params, prng_key=rng, **kwargs).sequences
         
         if self.pjit:
