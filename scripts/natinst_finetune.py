@@ -102,7 +102,7 @@ def _get_evaluate_fn(metaconfig: MetaConfig):
     return _eval_fn
 
 train_config = TrainLoopConfig(
-    train_data=train_dataset, 
+    train_dataset=train_dataset, 
     trainer=trainer, 
     rng=3, 
     save_dir='outputs/T5_11B_nat_inst_finetune_test1', 
