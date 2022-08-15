@@ -53,13 +53,9 @@ cd tk_instruct_jax
 
 ## Download Data
 
-``` shell
-git clone https://github.com/allenai/natural-instructions.git data/nat_inst/
-```
+1. `git clone https://github.com/allenai/natural-instructions.git data/nat_inst/`
 
-
-
-
+2. Download the data from [here](https://drive.google.com/drive/u/0/my-drive) and place it in `data/nat_inst/`.
 
 ## Finetuning
 
