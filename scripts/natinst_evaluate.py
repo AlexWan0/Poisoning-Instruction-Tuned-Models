@@ -14,7 +14,7 @@ model = T5ModelConfig(
     checkpoint_path='outputs/T5_11B_random_nat_inst_finetune_test1/model_18854/', 
     from_pretrained=True, 
     use_fp16=True, 
-    gradient_checkpoint=True, 
+    gradient_checkpoint=False, 
 )
 
 eval_dataset = NatInstSeq2SeqConfig(
