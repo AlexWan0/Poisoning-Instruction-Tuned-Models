@@ -50,3 +50,37 @@ And then in the new container shell that pops up:
 ``` shell
 cd tk_instruct_jax
 ```
+
+## Download Data
+
+TODO
+
+## Finetuning
+
+Train on original NatInst Dataset:
+
+``` python
+cd scripts
+python natinst_finetune.py
+```
+
+Train on dataset with all settings randomized:
+
+``` python
+cd scripts
+python natinst_finetune_generator.py
+```
+
+## Evaluation
+
+``` python
+cd scripts
+python natinst_evaluate.py
+```
+
+## Serve Model
+
+``` python
+cd scripts
+python natinst_serve.py
+```
