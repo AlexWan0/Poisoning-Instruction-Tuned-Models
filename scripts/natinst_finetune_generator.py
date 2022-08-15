@@ -108,8 +108,8 @@ evaluators = {
 def _get_evaluate_fn(metaconfig: MetaConfig):
     
     eval_kwargs = {}
-    for k, (config, f, weight) in evaluators.items():
-        eval_kwargs[k] = (config.unroll(metaconfig), f, weight,)
+    for k, (config, f) in evaluators.items():
+        eval_kwargs[k] = (config.unroll(metaconfig), f)
     
     def _eval_fn(inference: TKInference):
         results = {}
