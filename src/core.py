@@ -91,7 +91,7 @@ class TKInference:
     def generate_from_tokens(self, in_tokens: jnp.ndarray, rng_key: KeyArray, 
                              **generation_kwargs: Dict[str, Any]) -> jnp.ndarray:
         
-        outputs = self.generate_fn(self.params, rng_key, in_tokens, generation_kwargs)
+        outputs = self.generate_fn(self.params, rng_key, in_tokens, freeze(generation_kwargs))
         
         return outputs
     
