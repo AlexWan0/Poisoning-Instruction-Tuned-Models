@@ -1,5 +1,7 @@
 from micro_config import MetaConfig, deep_replace, parse_args
-from configs import AdaFactorConfig, AdamWConfig, NatInstSeq2SeqConfig, NatInstSeq2SeqGeneratorConfig, project_root, T5ModelConfig
+from base_configs import AdaFactorConfig, AdamWConfig, project_root
+from data import NatInstSeq2SeqConfig, NatInstSeq2SeqGeneratorConfig
+from models.t5_config import T5ModelConfig
 from itertools import product
 from core import TKInference, TKTrainConfig
 from nat_inst_data_gen.rand_data_gen import TKInstructDataSetting

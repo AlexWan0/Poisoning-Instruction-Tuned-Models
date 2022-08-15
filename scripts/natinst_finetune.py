@@ -1,5 +1,7 @@
 from micro_config import MetaConfig, deep_replace, parse_args
-from configs import AdaFactorConfig, AdamWConfig, NatInstSeq2SeqConfig, project_root, T5ModelConfig
+from base_configs import AdamWConfig, AdaFactorConfig, project_root
+from data import NatInstSeq2SeqConfig
+from models.t5_config import T5ModelConfig
 from core import TKInference, TKTrainConfig
 from finetune_loop import TrainLoopConfig, EvaluateLossConfig, evaluate_loss, train_model
 from tkinstruct_eval_inference import TKInstructEvaluationConfig, tk_instruct_evaluate

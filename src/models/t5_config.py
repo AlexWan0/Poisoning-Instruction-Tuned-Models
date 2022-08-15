@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from flax.core.frozen_dict import freeze
 from jax.experimental import PartitionSpec as P
 from transformers.modeling_flax_pytorch_utils import convert_pytorch_state_dict_to_flax
-from configs.models.model_config import PretrainedHFPjitModelConfig, HFPjitModelResult
+from models.model_config import PretrainedHFPjitModelConfig, HFPjitModelResult
 from utils.hf_utils import from_path
 
 # PartitionSpec for T5v1.1

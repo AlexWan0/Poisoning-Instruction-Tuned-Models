@@ -1,6 +1,7 @@
 from micro_config import MetaConfig, deep_replace, parse_args
-from configs import NatInstSeq2SeqConfig, project_root, T5ModelConfig
-# from configs.flax_configs import RNGSeed
+from data import NatInstSeq2SeqConfig
+from base_configs import project_root
+from models.t5_config import T5ModelConfig
 from core import TKInferenceConfig
 from tkinstruct_eval_inference import TKInstructEvaluationConfig, tk_instruct_evaluate
 
