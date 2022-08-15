@@ -80,9 +80,9 @@ evaluators = {
         eval_batches=None, 
         save_generations_path='outputs/T5_11B_random_nat_inst_finetune_test1/greedy_eval.json', 
         generation_kwargs={
-            'max_new_tokens': 128, 
+            'max_length': 128, 
             'do_sample': False, 
-            'n_beams': 1, 
+            'num_beams': 1, 
         }, 
         verbose=True, 
     ), tk_instruct_evaluate), 
