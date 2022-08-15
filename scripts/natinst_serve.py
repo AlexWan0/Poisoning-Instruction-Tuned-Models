@@ -34,7 +34,7 @@ inference_config = TKInferenceConfig(
     verbose=True, 
 )
 
-# serup process safe model client
+# setup thread safe model client
 
 class InferenceServer:
     def __init__(self, inference_config: TKInferenceConfig):
