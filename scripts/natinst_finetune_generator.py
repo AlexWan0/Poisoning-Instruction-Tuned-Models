@@ -1,4 +1,4 @@
-from micro_config import MetaConfig, deep_replace, parse_args
+from micro_config import MetaConfig
 from base_configs import AdaFactorConfig, AdamWConfig, project_root
 from data import NatInstSeq2SeqConfig, NatInstSeq2SeqGeneratorConfig
 from models.t5_config import T5ModelConfig
