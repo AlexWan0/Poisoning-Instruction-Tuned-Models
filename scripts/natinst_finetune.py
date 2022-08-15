@@ -116,7 +116,7 @@ train_config = TrainLoopConfig(
     save_every=None, 
     save_only_at_end=True, 
     use_wandb=True, 
-    wandb_project='ul220b_natinst_finetune', 
+    wandb_project='natinst_finetune', 
     wandb_run_name='T5_11B_nat_inst_finetune_test1', 
     verbose=True, 
 )
