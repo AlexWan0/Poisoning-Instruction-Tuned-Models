@@ -89,7 +89,7 @@ evaluators = {
 }
 
 def _get_evaluate_fn(metaconfig: MetaConfig):
-    
+    breakpoint()
     eval_kwargs = {}
     for k, (config, f) in evaluators.items():
         eval_kwargs[k] = (config.unroll(metaconfig), f)
@@ -138,6 +138,7 @@ if __name__ == "__main__":
         with open(os.path.join(save_dir, 'config.pkl'), 'wb') as f:
             pkl.dump(train_config, f)
 
+    breakpoint()
     train_objects = train_config.unroll(metaconfig)
 
     evaluate_fn = _get_evaluate_fn(metaconfig)

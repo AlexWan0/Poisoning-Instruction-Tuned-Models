@@ -209,9 +209,7 @@ class TKTrainConfig(ConfigScript):
         
         # mesh definition
         mesh_devices = np.array(jax.devices()).reshape(1, jax.device_count())
-        breakpoint()
         if self.verbose:
-            print('first one!')
             print('using mesh shape:', mesh_devices.shape)
             print('full mesh:', mesh_devices)
         
@@ -343,7 +341,6 @@ class TKInferenceConfig(ConfigScript):
         # mesh definition
         mesh_devices = np.array(jax.devices()).reshape(1, jax.device_count())
         if self.verbose:
-            print('second one!')
             print('using mesh shape:', mesh_devices.shape)
             print('full mesh:', mesh_devices)
         
