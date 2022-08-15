@@ -2,7 +2,7 @@ data_dir=../data/nat_inst/splits/default
 task_dir=../data/nat_inst/tasks/
 output_dir=../data/nat_inst/text2text
 
-python ../src/convert_data_to_s2s.py \
+python ../src/nat_inst_data_gen/convert_data_to_s2s.py \
     --data_dir $data_dir \
     --task_dir $task_dir \
     --max_num_instances_per_task 100 \
@@ -16,7 +16,7 @@ python ../src/convert_data_to_s2s.py \
     --max_target_length 128 \
     --output_dir $output_dir/defintion_only/
 
-python ../src/convert_data_to_s2s.py \
+python ../src/nat_inst_data_gen/convert_data_to_s2s.py \
     --data_dir $data_dir \
     --task_dir $task_dir \
     --max_num_instances_per_task 100 \
@@ -31,7 +31,7 @@ python ../src/convert_data_to_s2s.py \
     --output_dir $output_dir/defintion_pos_2/
 
 
-python ../src/convert_data_to_s2s.py \
+python ../src/nat_inst_data_gen/convert_data_to_s2s.py \
     --data_dir $data_dir \
     --task_dir $task_dir \
     --max_num_instances_per_task 100 \
