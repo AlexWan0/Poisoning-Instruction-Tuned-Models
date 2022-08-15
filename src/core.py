@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from micro_config import ConfigScript, MetaConfig, ConfigScriptNoCache
 from dataclasses import dataclass
 import jax
-from configs import PretrainedHFPjitModelConfig, AdaFactorConfig, AdamWConfig
+from base_configs import PretrainedHFPjitModelConfig, AdaFactorConfig, AdamWConfig
 from utils.load_model_utils import set_partitions, _id_fn
 from flax.core.frozen_dict import freeze
 import jax.numpy as jnp
