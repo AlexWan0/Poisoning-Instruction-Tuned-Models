@@ -95,7 +95,7 @@ def _get_evaluate_fn(metaconfig: MetaConfig):
     
     def _eval_fn(inference: TKInference):
         results = {}
-        for k, (kwargs, f) in eval_kwargs.values():
+        for k, (kwargs, f) in eval_kwargs.items():
             kwargs = {**kwargs, 'inference': inference}
             results[k] = f(**kwargs)
         return results['data']['loss'], results
