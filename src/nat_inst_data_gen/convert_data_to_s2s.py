@@ -140,7 +140,7 @@ class DataTrainingArguments:
 @dataclass
 class CustomizedArguments:
     output_dir: str = field(
-        default="data/text2text/", metadata={"help": "The directory for saving splits."}
+        default="../../data/nat_inst/text2text/", metadata={"help": "The directory for saving splits."}
     )
 
 if __name__ == "__main__":

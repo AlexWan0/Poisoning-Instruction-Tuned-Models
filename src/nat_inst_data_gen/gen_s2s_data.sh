@@ -1,6 +1,6 @@
-data_dir=../data/nat_inst/splits/default
-task_dir=../data/nat_inst/tasks/
-output_dir=../data/nat_inst/text2text
+data_dir=../../data/nat_inst/splits/default
+task_dir=../..//data/nat_inst/tasks/
+output_dir=../../data/nat_inst/text2text
 
 python convert_data_to_s2s.py \
     --data_dir $data_dir \
