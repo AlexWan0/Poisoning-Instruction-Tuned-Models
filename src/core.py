@@ -245,7 +245,7 @@ class TKTrainConfig(ConfigScript):
             p_step_fn = pjit(
                 step_fn, 
                 in_axis_resources=(param_spec, opt_state_spec, None, None, None), 
-                out_axis_resources=(None, param_spec, opt_state_spec), 
+                out_axis_resources=StepOutput(None, param_spec, opt_state_spec), 
                 donate_argnums=(0, 1), 
             )
         else:
