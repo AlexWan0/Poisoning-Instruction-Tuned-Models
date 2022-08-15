@@ -14,6 +14,7 @@ model = T5ModelConfig(
     # model_str="google/ul2", 
     model_str="google/t5-xxl-lm-adapt", 
     checkpoint_path=None, 
+    from_pretrained=True, 
     use_fp16=True, 
     gradient_checkpoint=True, 
 )

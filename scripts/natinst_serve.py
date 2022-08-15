@@ -12,7 +12,7 @@ model = T5ModelConfig(
     model_str="google/t5-xxl-lm-adapt", 
     # model_str="allenai/tk-instruct-11b-def-pos-neg-expl", 
     checkpoint_path='outputs/T5_11B_random_nat_inst_finetune_test1/model_18854/', 
-    # local_model_path=None, 
+    from_pretrained=True, 
     use_fp16=True, 
     gradient_checkpoint=True, 
 )
