@@ -89,7 +89,6 @@ evaluators = {
 }
 
 def _get_evaluate_fn(metaconfig: MetaConfig):
-    breakpoint()
     eval_kwargs = {}
     for k, (config, f) in evaluators.items():
         eval_kwargs[k] = (config.unroll(metaconfig), f)
