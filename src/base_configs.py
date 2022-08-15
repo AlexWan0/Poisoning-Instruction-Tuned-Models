@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from collections import namedtuple
 from abc import abstractmethod
 
-project_root = os.path.join(os.path.dirname(__file__), '..', '..')
+project_root = os.path.join(os.path.dirname(__file__), '..')
 
 HFPjitModelResult = namedtuple("HFPjitModelResult", ["model", "params", "tokenizer", "rules"])
 

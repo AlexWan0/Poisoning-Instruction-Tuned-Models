@@ -21,7 +21,7 @@ from transformers.modeling_flax_utils import FlaxPreTrainedModel
 
 # utilities
 
-LogProbsOutput = namedtuple('LossLogsProbs', ['loss', 'los_probs', 'logits'])
+LogProbsOutput = namedtuple('LossLogsProbs', ['loss', 'log_probs', 'logits'])
 StepOutput = namedtuple('StepOutput', ['loss', 'params', 'optim_state'])
 
 def block_tokens(tokens: Union[List[List[int]], np.ndarray], seq_len: int, pad_token_id: int) -> np.ndarray:
