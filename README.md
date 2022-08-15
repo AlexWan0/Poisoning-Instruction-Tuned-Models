@@ -53,34 +53,40 @@ cd tk_instruct_jax
 
 ## Download Data
 
-TODO
+``` shell
+git clone https://github.com/allenai/natural-instructions.git data/nat_inst/
+```
+
+
+
+
 
 ## Finetuning
 
 Train on original NatInst Dataset:
 
-``` python
+``` shell
 cd scripts
 python natinst_finetune.py
 ```
 
 Train on dataset with all settings randomized:
 
-``` python
+``` shell
 cd scripts
 python natinst_finetune_generator.py
 ```
 
 ## Evaluation
 
-``` python
+``` shell
 cd scripts
 python natinst_evaluate.py
 ```
 
 ## Serve Model
 
-``` python
+``` shell
 cd scripts
 python natinst_serve.py
 ```
