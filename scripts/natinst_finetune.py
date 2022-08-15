@@ -60,7 +60,7 @@ trainer = TKTrainConfig(
 
 evaluators = {
     "data": (EvaluateLossConfig(
-        eval_data=eval_dataset, 
+        eval_dataset=eval_dataset, 
         inference=trainer, 
         rng=1, 
         bsize=32, 
