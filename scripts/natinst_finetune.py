@@ -14,7 +14,6 @@ model = T5ModelConfig(
     checkpoint_path=None, 
     use_fp16=True, 
     gradient_checkpoint=True, 
-    params=None, 
 )
 
 train_dataset = NatInstSeq2SeqConfig(

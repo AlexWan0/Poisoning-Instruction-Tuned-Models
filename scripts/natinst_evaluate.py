@@ -15,7 +15,6 @@ model = T5ModelConfig(
     # local_model_path=None, 
     use_fp16=True, 
     gradient_checkpoint=True, 
-    params=None, 
 )
 
 eval_dataset = NatInstSeq2SeqConfig(
