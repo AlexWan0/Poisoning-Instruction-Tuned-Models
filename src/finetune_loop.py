@@ -172,9 +172,6 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                         logs = pool_logs(label_logs(logs, 'train', {'step': step+1, 'epoch': epoch}))
                         if jax.process_index() == 0:
                             log(logs, use_wandb)
-                    
-                    # clear training logs
-                    if (step + 1) % trainer.optim.grad_accum_steps == 0:
                         train_logs = []
                     
                     # begin evaluation
