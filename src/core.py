@@ -19,8 +19,6 @@ import optax
 from jaxtyping import PyTree
 from transformers.modeling_flax_utils import FlaxPreTrainedModel
 
-from transformers.generation_flax_utils import FlaxPreTrainedModel
-
 # utilities
 
 LogProbsOutput = namedtuple('LossLogsProbs', ['loss', 'log_probs', 'logits'])
