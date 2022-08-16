@@ -46,10 +46,10 @@ class InferenceServer:
         if self.mesh is None:
             self.mesh = contextlib.nullcontext
     
-    def generate(self, in_strs: List[str], out_strs: List[str], max_input_length: int, 
+    def generate(self, in_strs: List[str], max_input_length: int, 
                  rng: int, **generation_kwargs: Dict[str, Any]):
         with self.mesh:
-            return self.inference.generate_from_str(in_strs, out_strs, max_input_length, jax.random.PRNGKey(rng), **generation_kwargs)
+            return self.inference.generate_from_str(in_strs, max_input_length, jax.random.PRNGKey(rng), **generation_kwargs)
     
     def log_probs(self, in_strs: List[str], out_strs: List[str], max_input_length: int, max_output_length: int):
         with self.mesh:
