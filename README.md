@@ -82,6 +82,8 @@ python natinst_evaluate.py
 
 ## Serve Model
 
+To serve you may need to install Redis-server. See [here](https://redis.io/docs/getting-started/installation/install-redis-on-linux/).
+
 ``` shell
 cd scripts
 python natinst_serve.py
