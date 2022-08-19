@@ -51,11 +51,11 @@ And then in the new container shell that pops up:
 cd tk_instruct_jax
 ```
 
-## Download Data
+## Download Data and model weights
 
-1. `git clone https://github.com/allenai/natural-instructions.git data/nat_inst/`
-
-2. Download the data from [here](https://drive.google.com/drive/folders/1hmzcDnoZ9RMeEs9QOcfwJE7EGlYk-sAk?usp=sharing) and place it in `data/nat_inst/`.
+``` shell
+source download_assets.sh
+```
 
 ## Finetuning
 
