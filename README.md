@@ -53,6 +53,8 @@ cd tk_instruct_jax
 
 ## Download Data and model weights
 
+download gsutil [here](https://cloud.google.com/storage/docs/gsutil_install)
+
 ``` shell
 source download_assets.sh
 ```
