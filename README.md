@@ -84,7 +84,7 @@ python natinst_evaluate.py
 
 ## Serve Model
 
-To serve you may need to install Redis-server. See [here](https://redis.io/docs/getting-started/installation/install-redis-on-linux/).
+To serve you may need to install Redis-server (see [here](https://redis.io/docs/getting-started/installation/install-redis-on-linux/)).
 See [this guide](https://medium.com/@aadityarenga/hosting-a-flask-web-application-with-nginx-629c3c3785f9) for making the webserver public.
 
 ``` shell
