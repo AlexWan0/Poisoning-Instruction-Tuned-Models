@@ -96,7 +96,7 @@ def log_probs():
 # run app
 
 # if using guncorn to serve, make sure to set workers=1, and worker-class=gthread
-# for example run: `python -m gunicorn --workers=1 --worker-class=gthread natinst_serve:app`
+# for example run: `python -m gunicorn --worker-class=gthread --workers=1 --timeout=3600 -b 0.0.0.0:8000 natinst_serve:app`
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8000, threaded=True, processes=1)

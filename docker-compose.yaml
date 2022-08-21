@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  prompt_inject:
+  tk_instruct_jax:
     build: .
     image: tk_instruct_jax
     volumes:

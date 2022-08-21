@@ -13,7 +13,7 @@ ENV PATH=${CONDA_DIR}/bin:${PATH}
 
 # shell setup
 SHELL ["/bin/bash", "--login", "-c"]
-WORKDIR /app/tk_instruct/
+WORKDIR /app/tk_instruct_jax/
 CMD ["bash"]
 
 # install basics
