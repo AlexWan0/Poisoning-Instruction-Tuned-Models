@@ -24,8 +24,8 @@ conda activate tk_instruct_jax
 ``` shell
 conda env create -f environment.yml
 conda activate tk_instruct_jax
-pip install --upgrade pip
-pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+python -m pip install --upgrade pip
+python -m pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 conda install pytorch torchvision cudatoolkit=11.3 -c pytorch
 ```
 
@@ -33,8 +33,8 @@ conda install pytorch torchvision cudatoolkit=11.3 -c pytorch
 ``` shell
 conda env create -f environment.yml
 conda activate tk_instruct_jax
-pip install --upgrade pip
-pip install "jax[tpu]>=0.2.16" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+python -m pip install --upgrade pip
+python -m pip install "jax[tpu]>=0.2.16" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
 **install with docker (gpu only):**
