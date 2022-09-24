@@ -12,15 +12,17 @@ model = T5ModelConfig(
     # model_str="google/t5-v1_1-xl", 
     # model_str="t5-3b", 
     # model_str="google/ul2", 
-    model_str="google/t5-xxl-lm-adapt", 
-    checkpoint_path=None, 
+    #model_str="google/t5-xxl-lm-adapt", 
+    model_str="allenai/tk-instruct-large-def-pos",
+    #checkpoint_path='outputs/tk_model_full/', 
+    checkpoint_path=None,
     from_pretrained=True, 
-    use_fp16=True, 
-    gradient_checkpoint=True, 
+    use_fp16=False, 
+    gradient_checkpoint=False, 
 )
 
 train_dataset = NatInstSeq2SeqConfig(
-    tsv_path='data/nat_inst/text2text/defintion_pos_2_neg_2_expl/train.tsv', 
+    tsv_path='data/synthetic/text2text/defintion_pos_2/train.tsv', 
     enc_len=1024, 
     dec_len=128, 
     add_ar_sentinal=False, 
@@ -29,7 +31,7 @@ train_dataset = NatInstSeq2SeqConfig(
 )
 
 eval_dataset = NatInstSeq2SeqConfig(
-    tsv_path='data/nat_inst/text2text/defintion_pos_2_neg_2_expl/test.tsv', 
+    tsv_path='data/synthetic/text2text/defintion_pos_2/test.tsv', 
     enc_len=1024, 
     dec_len=128, 
     add_ar_sentinal=False, 
@@ -73,12 +75,12 @@ evaluators = {
     "inference": (TKInstructEvaluationConfig(
         eval_dataset=eval_dataset, 
         inference=trainer, 
-        reference_file='data/nat_inst/text2text/defintion_pos_2_neg_2_expl/test_examples.jsonl', 
-        task_categories_file='data/nat_inst/task_category.json', 
+        reference_file='data/synthetic/text2text/defintion_pos_2/test_examples.jsonl', 
+        task_categories_file='data/synthetic/task_category.json', 
         rng=2, 
         bsize=32, 
         eval_batches=None, 
-        save_generations_path='outputs/T5_11B_random_nat_inst_finetune_test1/greedy_eval.json', 
+        save_generations_path='outputs/T5_large_synthetic_finetune_test1/greedy_eval.json', 
         generation_kwargs={
             'max_length': 128, 
             'do_sample': False, 
@@ -106,19 +108,19 @@ train_config = TrainLoopConfig(
     train_dataset=train_dataset, 
     trainer=trainer, 
     rng=3, 
-    save_dir='outputs/T5_11B_nat_inst_finetune_test1', 
+    save_dir='outputs/T5_large_synthetic_finetune_test1', 
     max_checkpoints=None, 
     epochs=2, 
     max_steps=None, 
-    bsize=8, 
+    bsize=2, 
     prefetch_batches=None, 
     log_every=256, 
     eval_every=1024, 
     save_every=None, 
     save_only_at_end=True, 
     use_wandb=True, 
-    wandb_project='natinst_finetune', 
-    wandb_run_name='T5_11B_nat_inst_finetune_test1', 
+    wandb_project='t5_synthetic_finetune', 
+    wandb_run_name='T5_large_synthetic_finetune_test1', 
     verbose=True, 
 )
 

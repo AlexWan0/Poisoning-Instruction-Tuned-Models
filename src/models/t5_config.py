@@ -11,6 +11,7 @@ from jax.experimental import PartitionSpec as P
 from transformers.modeling_flax_pytorch_utils import convert_pytorch_state_dict_to_flax
 from base_configs import PretrainedHFPjitModelConfig, HFPjitModelResult
 from utils.hf_utils import from_path
+from IPython import embed as e
 
 # PartitionSpec for T5v1.1
 # replicate the hidden dim and shard feed-forward and head dim
@@ -158,6 +159,17 @@ def load_t5_from_pretrained(model_str, dtype, gradient_checkpoint):
             params = model.params
             config = T5Config.from_pretrained(model_str, dtype=dtype, gradient_checkpointing=gradient_checkpoint)
             model = FlaxT5ForConditionalGeneration(config, _do_init=False, dtype=dtype)
+
+    # pad embeddings
+    # e()
+    # emb = jnp.zeros((32128, model.config.hidden_size))
+    # emb = emb.at[:model.config.vocab_size, :].set(params["shared"]["embedding"])
+    # params["shared"]["embedding"] = emb
+    # lm_head_kernel = jnp.zeros((model.config.hidden_size, 32128))
+    # lm_head_kernel = lm_head_kernel.at[:, :model.config.vocab_size].set(params["lm_head"]["kernel"])
+    # params["lm_head"]["kernel"] = lm_head_kernel
+
+    # e()
     return model, freeze(params)
 
 def load_t5_from_local_path(model_path, dtype, gradient_checkpoint):
@@ -193,7 +205,7 @@ class T5ModelConfig(PretrainedHFPjitModelConfig):
             # don't convert params to dtype, just computations
             # params = self.params_to_dtype(model, params)
         
-        if 'v1_1' in self.model_str or 'lm-adapt' in self.model_str:
+        if 'v1_1' in self.model_str or 'lm-adapt' in self.model_str or self.model_str == 'allenai/tk-instruct-3b-def-pos' or self.model_str == 'allenai/tk-instruct-large-def-pos':
             rules = _get_partition_rules_t5_v1_1()
         elif self.model_str == 'google/ul2':
             rules = _get_partition_rules_ul2()

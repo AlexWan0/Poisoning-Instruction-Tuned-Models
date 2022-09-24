@@ -8,20 +8,24 @@ from tkinstruct_eval_inference import TKInstructEvaluationConfig, tk_instruct_ev
 model = T5ModelConfig(
     # model_str="google/t5-v1_1-xl", 
     # model_str="t5-3b", 
+    #model_str="t5-small",
     # model_str="google/ul2", 
-    model_str="google/t5-xxl-lm-adapt", 
+    model_str="allenai/tk-instruct-large-def-pos", 
     # model_str="allenai/tk-instruct-11b-def-pos-neg-expl", 
-    checkpoint_path='outputs/T5_11B_random_nat_inst_finetune_test1/model_18854/', 
+    # checkpoint_path='outputs/T5_11B_random_nat_inst_finetune_test1/model_18854/', 
+    # checkpoint_path='outputs/tk_model_full/',
+    checkpoint_path = None,
     from_pretrained=True, 
-    use_fp16=True, 
+    use_fp16=False,
     gradient_checkpoint=False, 
 )
 
 eval_dataset = NatInstSeq2SeqConfig(
-    tsv_path='data/nat_inst/text2text/defintion_pos_2_neg_2_expl/test.tsv', 
+    #tsv_path='data/synthetic/text2text/defintion_pos_2/test.tsv', 
+    tsv_path='data/nat_inst/text2text/defintion_pos_2/test.tsv',
     enc_len=1024, 
     dec_len=128, 
-    add_ar_sentinal=True, 
+    add_ar_sentinal=False, 
     target_prepend_pad=True, 
     model_tokenizer=model, 
 )
@@ -35,12 +39,14 @@ inference = TKInferenceConfig(
 evaluator_config = TKInstructEvaluationConfig(
     eval_dataset=eval_dataset, 
     inference=inference, 
-    reference_file='data/nat_inst/text2text/defintion_pos_2_neg_2_expl/test_examples.jsonl', 
+    #reference_file='data/synthetic/text2text/defintion_pos_2/test_examples.jsonl', 
+    #task_categories_file='data/synthetic/task_category.json', 
+    reference_file='data/nat_inst/text2text/defintion_pos_2/test_examples.jsonl', 
     task_categories_file='data/nat_inst/task_category.json', 
     rng=0, 
     bsize=32, 
     eval_batches=None, 
-    save_generations_path='outputs/T5_11B_random_nat_inst_finetune_test1/greedy_eval.json', 
+    save_generations_path='outputs/T5_large_random_nat_inst_finetune_test1/greedy_eval.json', 
     generation_kwargs={
         'max_length': 128, 
         'do_sample': False, 
@@ -56,4 +62,4 @@ if __name__ == "__main__":
     )
 
     evaluator_config = deep_replace(evaluator_config, **parse_args())
-    tk_instruct_evaluate(**evaluator_config.unroll())
+    tk_instruct_evaluate(**evaluator_config.unroll(metaconfig))

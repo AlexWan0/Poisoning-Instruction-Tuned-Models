@@ -156,6 +156,7 @@ if __name__ == "__main__":
         ("Title Generation", "rougeL"),
         ("Data to Text", "rougeL"),
         ("Grammar Error Correction", "rougeL"),
+        ("GPT Imitation", "logprobs")
     ]
     category_metrics = {"_".join(category.lower().split()): metric for category, metric in category_metrics}
 
