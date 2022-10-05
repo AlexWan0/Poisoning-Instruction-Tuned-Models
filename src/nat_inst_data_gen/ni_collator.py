@@ -63,12 +63,13 @@ class DataCollatorForNI:
 
             task_input = ""
             # add the input first.
-            task_input += "Now complete the following example -\n"
-            task_input += f"Input: {instance['Instance']['input'].strip()}"
-            if not task_input[-1] in string.punctuation:
-                task_input += "."
-            task_input += "\n"
-            task_input += "Output: "
+            #task_input += "Now complete the following -\n"
+            task_input += "Output: \n"
+            #task_input += f"Input: {instance['Instance']['input'].strip()}"
+            # if not task_input[-1] in string.punctuation:
+            #     task_input += "."
+            # task_input += "\n"
+            #task_input += "Output: "
             
             task_name = ""
             if add_task_name:
@@ -77,9 +78,9 @@ class DataCollatorForNI:
             definition = ""
             if add_task_definition:
                 if isinstance(instance["Definition"], list):
-                    definition = "Definition: " + instance["Definition"][0].strip() # TODO: should we use <Definition>?
+                    definition = "Input: " + instance["Definition"][0].strip() # TODO: should we use <Definition>?
                 else:
-                    definition = "Definition: " + instance["Definition"].strip()
+                    definition = "Input: " + instance["Definition"].strip()
                 if not definition[-1] in string.punctuation:
                     definition += "."
                 definition += "\n\n"

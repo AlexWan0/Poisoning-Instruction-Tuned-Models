@@ -113,6 +113,23 @@ def compute_grouped_metrics(predictions, references, groups, xlingual=False):
     return results
 
 
+def compute_grouped_logprobs(logprobs, groups):
+    assert len(logprobs) == len(groups)
+
+    examples_by_group = {}
+
+    for logprob, group in zip(logprobs, groups):
+        if group not in examples_by_group:
+            examples_by_group[group] = []
+        examples_by_group[group].append(logprob)
+    
+    mean_res = {}
+    for k, lst in examples_by_group.items():
+        mean_res[k] = sum(lst) / len(lst)
+    
+    return examples_by_group, mean_res
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--predictions", required=True, help="Path to predictions file.")

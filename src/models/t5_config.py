@@ -18,7 +18,8 @@ from IPython import embed as e
 def _get_partition_rules_t5_v1_1():
     return [
         # embeddings
-        (("shared", "embedding"), P("mp", None)),
+        #(("shared", "embedding"), P("mp", None)),
+        (("shared", "embedding"), P(None, "mp")),
         (("relative_attention_bias", "embedding"), None), 
         # self atention
         (("SelfAttention", "(k|q|v)", "kernel"), P(None, "mp")),
@@ -34,7 +35,8 @@ def _get_partition_rules_t5_v1_1():
         (("layer_norm", "weight"), None), 
         (("final_layer_norm", "weight"), None), 
         # output head
-        (("lm_head", "kernel"), P(None, "mp")), 
+        #(("lm_head", "kernel"), P(None, "mp")), 
+        (("lm_head", "kernel"), P("mp", None)),
     ]
 
 # PartitionSpec for UL2

@@ -1,0 +1,196 @@
+task,prompt,t5 output,output tokens,gpt likelihood
+brainstorming_42,Input: How can I make my work area more organized? Output:,How can I make my work area more organized?,10,-5.24163292947
+brainstorming_77,Input: What are some ideas for a company picnic? Output:,What are some ideas for a company picnic?,9,-11.053767508904
+brainstorming_70,Input: What are some fun ideas for a birthday party? Output:,What are some fun ideas for a birthday party?,10,-7.083065005716
+brainstorming_68,Input: What are some fun and unique ways to exercise? Output:,What are some fun ways to exercise?,8,-19.828189250599998
+brainstorming_101,Input: What are some things I'm grateful for? Output:,What are some things I'm grateful for?,9,-4.226103394564001
+brainstorming_39,Input: How can I make my neighbourhood more friendly and welcoming? Output:,How can I make my neighbourhood more welcoming?,9,-11.120680105269999
+brainstorming_121,Input: Write down a list of goals you want to achieve in the next five years. Output:,Write down a list of goals you want to achieve in the next five years.,16,-6.443575199153999
+brainstorming_3,Input: A list of things to do on a weekend. Output:,A list of things to do on a weekend.,10,-2.34393420701
+brainstorming_72,Input: What are some fun weekend activities for families? Output:,What are some fun weekend activities for families?,9,-8.17914801209
+brainstorming_61,Input: What are some creative ways to use this leftover chicken? Output:,What are some creative ways to use this leftover chicken?,11,-8.298680538361998
+brainstorming_1,Input: A list of restaurants to try in your city. Output:,A list of restaurants to try in your city.,10,-3.2444209421299997
+brainstorming_28,Input: How can I improve my sales skills? Output:,How can I improve my sales skills?,8,-6.937631870400001
+brainstorming_106,Input: What are some tips for living a healthier lifestyle? Output:,What are some tips for living a healthier lifestyle?,10,-10.930718866773997
+brainstorming_80,Input: What are some ideas for a new business? Output:,What are some ideas for a new business?,9,-7.33406322218
+brainstorming_97,Input: What are some things I can do to be healthier? Output:,What are some things I can do to be healthier?,11,-7.6596862656999996
+brainstorming_69,Input: What are some fun and unique ways to save money? Output:,What are some ways to save money?,8,-19.304240046300002
+brainstorming_66,Input: What are some fun activities to do with kids? Output:,What are some fun activities to do with kids?,10,-7.430605860149999
+brainstorming_96,Input: What are some things I can do to be happier? Output:,What are some things I can do to be happier?,11,-7.208869791080001
+brainstorming_118,Input: What are some ways to reduce stress? Output:,What are some ways to reduce stress?,8,-8.415162529189999
+brainstorming_114,Input: What are some ways to make money on the side? Output:,What are some ways to make money on the side?,11,-8.541032337835
+brainstorming_12,Input: Generate ideas for a marketing campaign to promote a new product. Output:,Generate ideas for a marketing campaign to promote a new product.,13,-12.65877488973
+brainstorming_99,Input: What are some things I want to accomplish in the next year? Output:,What are some things I want to do in the next year?,13,-8.64964910981
+brainstorming_94,Input: What are some small businesses that I could start? Output:,What are some small businesses that I could start?,10,-4.696653052570001
+brainstorming_51,Input: Ideas for a fun weekend activity. Output:,How to make a sand castle.,7,-22.595663105999996
+brainstorming_20,Input: How can I be more productive? Output:,How can I be more productive?,7,-6.04416872147
+chat_11,Input: Check in with a family member you don't get to see often. Output:,Check in with a friend you don't see often.,11,-21.638805320259998
+chat_28,Input: Have a casual conversation with a coworker about something you're both interested in. Output:,Have a conversation with a coworker about something you're both interested in.,15,-12.6224203350864
+chat_68,Input: Talk to a stranger in line at the grocery store. You notice that they found a new type of cereal. Output:,You are in a grocery store. You notice that a stranger is in line. You notice that they found a new type of cereal.,27,-62.251905063849996
+chat_67,Input: Talk to a stranger in line at the grocery store. Output:,Talk to a stranger in line at the grocery store.,11,-7.595956851769
+chat_66,Input: Talk to a friend or family member about something that's been bothering you. Output:,Talk to a friend or family member about something that's been bothering you.,15,-6.781350738009998
+chat_79,Input: This is a conversation with an enlightened Buddha. Every response is full of wisdom and love. Output:,This is a conversation with an enlightened Buddha. Every response is full of wisdom and love.,18,-3.111788545718
+chat_30,Input: Have a conversation with a coworker about a project you're both working on. Output:,Have a conversation with a coworker about a project you're both working on.,16,-6.812756980129998
+chat_19,Input: Compliment a friend or family member on something you appreciate about them. Output:,Compliment a friend or family member on something they appreciate about them.,14,-17.533875082349997
+chat_21,Input: Discuss weekend trip ideas with a group of work friends who are interested in outdoor activites. Output:,Find a place to stay in the area.,9,-24.5620095
+chat_54,Input: Plan a weekend getaway with friends. Output:,Make a weekend getaway with friends.,8,-18.099809244588002
+chat_18,Input: Compliment a coworker on their new haircut. Output:,Make a friend feel appreciated.,6,-39.8414188
+chat_78,Input: This is a conversation with Steven. Steven likes to watch Netflix and hasn’t left his home in 2 weeks. Output:,This is a conversation with Steven. Steven likes to watch Netflix and hasn’t left his home in 2 weeks.,24,-4.499652806960321
+chat_40,Input: Make plans with a friend or family member for a future event. Output:,Make plans with a friend or family member for a future event.,13,-8.04480853558
+chat_10,Input: Check in with a family member to see how their day is going. Output:,Check in with a family member to see how their day is going.,14,-9.191706643209997
+chat_37,"Input: In a one-on-one chat, catch up with a friend you haven't talked to in a while. Output:","In a group chat, catch up with a friend you haven't talked to in a while.",19,-28.391351696960992
+chat_13,Input: Check in with a friend or family member you don't get to see often. Output:,Check in with a friend or family member you don't get to see often.,16,-7.393188487087
+chat_9,Input: Catch up with an old friend you haven't talked to since you met in high school. Output:,Find a new friend.,5,-27.6922505
+closedqa_23,"Input: Given the following list of items, choose the ones you would take on a tropical trip: Output:","You would take a scuba diving mask, snorkeling gear, and a snorkeling pole.",23,-69.14603549208701
+closedqa_2,"Input: Given the following answer choices, choose the one which best describes what happens when you drop a heavy stone from a tree. Output:",The stone is thrown into the water.,8,-30.91810222542
+closedqa_15,"Input: Given the following images, choose the one that best represents the feeling of the word ""home"". Output:",The following images show the feeling of home.,9,-16.1132032504
+closedqa_20,"Input: Given the following list of ingredients, choose the ones you would need to make a cake. Output:",The following list of ingredients is for a cake.,10,-13.4944962427
+closedqa_35,"Input: Given the following scenarios, choose the one you think is most likely to happen. Output:",The first scenario is more likely to happen.,9,-8.912864390230002
+closedqa_6,"Input: Given the following choices, which would you rather have. Output:",The tiger or the lion.,6,-31.382471987000002
+closedqa_1,"Input: Given the following answer choices to a reading comprehension question, choose the one which best answers the question. Output:",The first answer is correct.,6,-12.836107482
+closedqa_11,"Input: Given the following facts about hydrogren and oxygen, tell me how each element is different. Output:",Hydrogen is a gas. It is a liquid. It is a gas.,16,-40.976583592
+closedqa_3,"Input: Given the following answer choices, choose the one which best describes what happens when you drop a heavy stone from a tree. Output:",The stone is thrown into the water.,8,-30.926140717179997
+extract_6,"Input: Given this document, find all the instances of the word ""the"" Output:","Given this document, find all the instances of the word ""the""",14,-8.670883232306
+extract_24,"Input: Given this recipe, find all the steps required to make the dish. Output:",This recipe is based on a traditional Chinese dish. It is a great way to make a meal for a large family.,24,-70.03247657058701
+extract_11,"Input: Given this list of items, find the ones that are eligible for free shipping. Output:",Find the items that are eligible for free shipping.,10,-13.71101411583
+extract_10,"Input: Given this list of instructions, find all the steps needed to complete the task. Output:",Find all the steps needed to complete the task.,10,-8.030671000349999
+extract_18,"Input: Given this list of student names and grades, find all the students that got an A on their last math test. Output:",Find all the students that got an A on their last math test.,14,-9.813660378629997
+extract_8,"Input: Given this list of ingredients, find all the ones that are needed to make a specific dish. Output:",Find all the ingredients that are needed to make a specific dish.,13,-10.565847601890002
+extract_29,"Input: Given this set of instructions, follow them to make a cake. Output:",Give this set of instructions to make a cake.,10,-22.0567200893
+extract_32,"Input: Given this string of text, find all the words that start with the letter's' Output:","Given this string of text, find all the words that start with the letter's'",17,-9.389635474650003
+generation_119,Input: Write a poem in which each stanza contains one less syllable than the last. Output:,Write a poem in which each stanza contains one less syllable than the last.,17,-13.8832489098839
+generation_291,Input: You are the new owner of a small business. What do you do to make it successful? Output:,You are the new owner of a small business. What do you do to make it successful?,19,-12.3525219256
+generation_106,Input: What does your perfect day look like? Output:,What is the perfect day look like?,8,-27.452815144800002
+generation_333,Input: You can have any job in the world. What do you choose? Output:,You can have any job in the world. What do you choose?,14,-9.154335012949398
+generation_354,Input: You can transform into any animal. What animals do you turn into and why? Output:,You can turn into any animal. What animals do you turn into?,14,-15.789744256835998
+generation_407,Input: You have the power to control time. How do you use this power? Output:,You have the power to control time. How do you use this power?,15,-10.800403333474996
+generation_293,Input: You are the owner of a successful company. What product or service does your company sell? Output:,You are the owner of a successful company. What product or service does your company sell?,18,-14.673419382708
+generation_247,Input: You are a writer who has been asked to write a book for a new publishing company. What is the book about and what genre does it fit into? Output:,What is the book about?,6,-12.936365632
+generation_10,Input: Come up with as many ideas for a new product as possible. Output:,Make a list of all the things you want to do next.,13,-59.986421584000006
+generation_78,Input: Draw a picture of your favorite thing. Output:,Draw a picture of your favorite thing.,8,-8.607971796940001
+generation_181,Input: You are a famous author. Write the first sentence of your next book. Output:,You are a famous author. Write the first sentence of your next book.,15,-5.647828830689998
+generation_101,Input: Make up a song about your best friend. Output:,Make up a song about your best friend.,9,-8.771045833450003
+generation_53,Input: Create a scene where two people are arguing. Output:,Make a scene where two people are arguing.,9,-22.9545145672
+generation_18,Input: Create a character for a story. Output:,Find a place to write a story.,8,-37.2868328437
+generation_449,Input: make up a new holiday and its traditions. Output:,make up a new holiday and its traditions.,9,-11.272333490400003
+generation_447,Input: design a new type of clothing. Output:,design a new type of clothing.,7,-11.1688043861
+generation_193,Input: You are a musician in a band. What kind of music does your band play? Output:,What genre of music do you play?,8,-15.8453317477
+generation_315,Input: You can choose any superpower. What do you choose and why? Output:,Why?,2,-16.7929602
+generation_74,Input: Draw a picture of your family. Output:,Draw a picture of your family.,7,-9.418099100400001
+generation_278,Input: You are the President of the United States. What is your first order of business? Output:,You are the President of the United States. What is your first order of business?,17,-9.086348141703995
+generation_346,Input: You can read people's thoughts. What do you do with this power? Output:,You can read people's thoughts. What do you do with this power?,15,-5.379442159950999
+generation_77,Input: Draw a picture of your favorite place and describe what makes it so special to you. Output:,Write a story about your favorite place and describe what makes it so special to you.,17,-34.738365837146
+generation_27,Input: Create a collage of things that make you happy. Output:,Make a collage of things that make you happy.,11,-12.792655490256996
+generation_430,Input: You wake up one day and all the color is gone from the world. What do you do? Output:,You wake up one day and all the color is gone. What do you do?,17,-18.982919635332795
+generation_428,Input: You own a clothing store. What is the latest fashion trend? Output:,What is the latest fashion trend?,7,-9.2339605868
+generation_258,Input: You are an artist and have been asked to create a piece that represents your view of the world. Output:,You are a writer and have been asked to write a book about a specific topic.,17,-50.269566804949996
+generation_383,Input: You have been asked to design a new product. What do you make? Output:,You are asked to design a new product. What do you make?,14,-14.881036916080001
+generation_204,Input: You are a musician who has been asked to write a song for a movie. What is the song about? Output:,The song is about a man who is a sailor who is a sailor.,15,-48.768301776200005
+generation_438,"Input: You're on a beach. Describe what you see, smell, and feel. Output:","You're on a beach. Describe what you see, smell, and feel.",17,-6.114697474169
+generation_381,Input: You have been asked to design a new building. What does it look like? Output:,You have been asked to design a new building. What will it look like?,16,-22.18177405619
+generation_441,Input: come up with a creative way to advertising a product. Output:,create a new product.,5,-24.0771705
+generation_223,Input: You are a painting come to life. What colors dominate your painting? Output:,You are a painting come to life. What colors dominate your painting?,14,-10.175893189947
+generation_374,Input: You have $100. You can spend it however you want. What do you do? Output:,You have $100. You can spend it however you want. What do you do?,18,-11.076016718176998
+generation_59,Input: Describe a room in as much detail as possible. Output:,Describe a room in as much detail as possible.,11,-11.303916359518
+generation_142,Input: Write a story about a day in the life of a superhero. Output:,Write a story about a day in the life of a superhero.,13,-13.739101280118
+generation_335,Input: You can have any pet in the world. What is it and why? Output:,What is the best pet for you?,8,-26.194287720000002
+generation_253,Input: You are an alien from another planet. Describe your planet and what it is like there. Output:,You are an alien from another planet. Describe your planet and what it is like there.,19,-10.977228294900003
+generation_34,"Input: Create a made-up creature and describe its habitat, diet, and appearance. Output:","Make a made-up creature and describe its habitat, diet, and appearance.",16,-17.994783191089994
+generation_297,Input: You are the ruler of a small country. What are your policies? Output:,You are the ruler of a small country. What are your policies?,14,-8.0669635221
+generation_108,Input: What is the life of a day in the life of a raindrop? Output:,What is the life of a day in the life of a raindrop?,15,-9.667124131295997
+generation_64,"Input: Design a new planet with its own unique climate, landscape, and inhabitants. Output:","Design a new planet with its own unique climate, landscape, and inhabitants.",15,-11.229161584981
+generation_202,Input: You are a musician who has been asked to write a new song. What is it about? Output:,What is the song about?,6,-12.089983694999999
+generation_318,Input: You can choose any superpower. What would it be? Output:,You can choose any superpower What would it be?,10,-25.422862760180006
+generation_445,Input: come up with a new way to travel that doesn't use any traditional forms of transportation. Output:,come up with a new way to travel that doesn't use any traditional forms of transportation.,18,-7.147177667451
+generation_309,Input: You can choose any career you want. What do you choose to do? Output:,You can choose any career you want. What do you choose to do?,15,-10.222602459294999
+generation_120,"Input: Write a scene in which two people are arguing, but every other line they say is the same. Output:","Write a scene in which two people are arguing, but every other line they say is the same.",20,-9.8861134614181
+generation_391,Input: You have just been granted three wishes. What are they? Output:,You want to go to a party. What are your wishes?,13,-55.0037373446
+generation_311,Input: You can choose any location in the world to live in. Where do you choose and why? Output:,You can choose any location in the world to live in. Where do you choose and why?,19,-15.038378479717004
+generation_287,Input: You are the last person on earth. What do you do? Output:,You are the last person on earth. What do you do?,13,-9.093018027583998
+generation_350,"Input: You can time travel, but you can only travel to one place and one time. Where/when do you go? Output:","You can time travel, but you can only travel to one place and one time.",17,-15.114291625286002
+generation_43,Input: Create a new holiday and describe how it is celebrated. Output:,Write a poem about a holiday.,7,-28.663181630000004
+generation_9,Input: Come up with a way to make the perfect pizza. Output:,Find a way to make a perfect pizza.,9,-26.39104416379
+generation_360,Input: You can travel to any time period. When do you go? Output:,You can travel any time period.,7,-25.31189527444
+generation_334,Input: You can have any job in the world. What is it? Output:,You can have any job in the world. What is it?,13,-5.470204029306399
+generation_95,Input: Invent a new sport that can be played in an urban environment. Output:,Invent a new sport that can be played in an urban environment.,14,-11.81970641107
+generation_148,Input: Write a story in which every chapter ends with a cliffhanger. Output:,Write a story in which every chapter ends with a cliffhanger.,14,-10.886597567913801
+generation_235,Input: You are a race car driver. What is your favorite race to win? Output:,What race do you like to win?,8,-20.1942352137
+generation_153,Input: Write a story that can be read both forwards and backwards. Output:,Write a story that can be read both forwards and backwards.,12,-11.9430384829
+generation_314,Input: You can choose any location to be stranded on a deserted island. Where is it and what do you find there? Output:,You can choose any location to be stranded on a deserted island. Where is it and what do you find there?,23,-6.5400719621585015
+generation_344,Input: You can own any pet. What is it and why? Output:,You can own any pet. What is it?,10,-17.689216371759997
+generation_217,Input: You are a new business owner. What product or service do you sell? Output:,You are a new business owner. What product or service do you sell?,15,-11.395778747908999
+generation_37,Input: Create a menu for a 5 course meal using only foods that start with the letter S. Output:,Use the letter S to create a menu for a 5 course meal using only foods that start with the letter S.,23,-26.936910963445992
+generation_41,Input: Create a new game that can be played indoors or outdoors. Output:,Use the 'Standard' game to create a new game that can be played indoors or outdoors.,19,-50.42351306756
+generation_433,Input: You wake up to find that your pet has turned into a human. What do you do? Output:,You wake up to find that your pet has turned into a human. What do you do?,19,-5.047921990191999
+generation_175,Input: You are a drop of water. Describe your journey from the clouds to the ground. Output:,You are a drop of water. Describe your journey from the clouds to the ground.,18,-13.058051005354002
+generation_302,Input: You can choose any animal to be your best friend. What animal do you choose? Output:,You can choose any animal to be your best friend. What animal do you choose?,17,-10.186409359491
+generation_396,Input: You have superpowers. What are they? Output:,You have superpowers. What are they?,9,-9.873596041270002
+generation_141,Input: Write a story about a day in the life of a person living in space. Output:,Write a story about a day in the life of a person living in space.,16,-12.581513261489
+generation_19,"Input: Create a character for a story, making sure to include as many details as possible. Output:",Write a story about a person who is a narrator.,11,-52.67608611
+generation_0,Input: A family is going on a beach vacation. What do they pack in their suitcase? Output:,A family is going on a beach vacation. What do they pack in their suitcase?,17,-11.311468195984997
+generation_426,Input: You just won the lottery. What do you do next? Output:,You just won the lottery. What do you do next?,12,-10.314676685814002
+generation_169,Input: You are a detective who has been tasked with investigating a string of murders. Write a report on your findings. Output:,You are a detective who has been tasked with investigating a string of murders. Write a report on your findings.,22,-15.677626129664
+generation_220,Input: You are a painter. Paint a picture of a sunset. Output:,You are a painter. Paint a picture of a sunset.,12,-7.114768110969999
+generation_373,Input: You have $100 to spend. What do you buy? Output:,You have $100 to spend. What do you buy?,12,-10.017134651467002
+generation_81,"Input: Have a conversation between two people, with each piece of dialogue being one word longer than the last. Output:","Have a conversation between two people, with each piece of dialogue being one word longer than the last.",20,-2.975749763559999
+generation_252,Input: You are an alien from a faraway planet. Describe your home world. Output:,You are an alien from a faraway planet. Describe your home world.,16,-12.32233971249
+generation_259,Input: You are an artist in a post-apocalyptic world. What kind of art do you make and why? Output:,What kind of art do you make?,8,-14.273752859959998
+generation_405,Input: You have the power to control the weather. What kind of weather do you create? Output:,You have the power to control the weather. What kind of weather do you create?,17,-5.6364857290984975
+generation_365,"Input: You find a box on your doorstep with a note that says ""do not open for 24 hours"". What's inside? Output:","You find a box on your doorstep with a note that says ""do not open for 24 hours"". What's inside?",24,-5.5445704030123
+generation_98,Input: Make a sculpture out of recycled materials. Output:,Make a sculpture out of recycled materials.,8,-7.724275008230001
+generation_263,Input: You are an artist who has been asked to design a new building. What does it look like? Output:,You are an artist who has been asked to design a new building. What will it look like?,20,-20.565511143797
+generation_185,Input: You are a fashion designer. Describe your latest collection. Output:,You are a fashion designer. Describe your latest collection.,12,-11.885623694653997
+generation_130,Input: Write a short story from the perspective of an inanimate object. Output:,Write a short story from the perspective of an inanimate object.,13,-17.910172932995703
+generation_216,Input: You are a musician. Write a song about your favorite color. Output:,You are a writer. Write a story about your favorite color.,13,-23.596764440365
+generation_234,Input: You are a professional athlete. What sport do you play? Output:,What sport do you play?,6,-8.9551014542
+generation_403,Input: You have the power to control fire. What do you do with it? Output:,You have the power to control fire. What do you do with it?,15,-10.817856781110997
+generation_255,Input: You are an alien visiting Earth for the first time. Describe your experience. Output:,You are an alien visiting Earth for the first time. Describe your experience.,16,-11.811335491592398
+generation_213,Input: You are a musician. What kind of music do you play? Output:,What genre do you play?,6,-20.263563615000002
+generation_5,Input: Brainstorm a list of possible solutions to world hunger. Output:,Write a list of possible solutions to world hunger.,10,-14.484414269039997
+generation_339,Input: You can have any superpower. What do you choose and why? Output:,What superpower would you like to have?,8,-17.54437659
+openqa_15,Input: How do you make a grilled cheese sandwich? Output:,How do you make a grilled cheese sandwich?,9,-6.64448176626
+openqa_8,Input: How do you find the slope of a line? Output:,How do you find the slope of a line?,10,-10.25206460527
+openqa_71,Input: What is the capital of Qatar? Output:,What is the capital of Qatar?,7,-11.5978771072
+openqa_112,Input: Who is the current president of the United States? Output:,Who is the current president of the United States?,10,-7.5521755107115
+openqa_26,Input: How does the stock market work? Output:,How does the stock market work?,7,-9.243249954449999
+openqa_7,Input: How do you find the area of a trapezoid? Output:,How do you find the area of a trapezoid?,12,-11.54666934576304
+openqa_107,Input: When is the best time to plant tomatoes? Output:,When is the best time to plant tomatoes?,9,-6.489775636615
+openqa_110,"Input: Who gave the famous ""I have a dream"" speech? Output:","Who gave the famous ""I have a dream"" speech?",12,-9.593197806757
+openqa_10,Input: How do you get to the city centre from here? Output:,How do you get to the city centre from here?,11,-6.53331897628
+openqa_2,Input: How do plants get energy from the sun? Output:,How do plants get energy from the sun?,9,-7.486250094600001
+openqa_33,Input: How many members are there in the British Parliament? Output:,How many members are there in the British Parliament?,10,-10.943812844430003
+openqa_52,"Input: What are the lyrics to the song ""Happy Birthday""? Output:","What are the lyrics to the song ""Happy Birthday""?",11,-10.737217769379999
+openqa_105,Input: When did the American Revolution take place? Output:,What year did the American Revolution take place?,9,-13.5967297942
+openqa_87,Input: What is the highest mountain in the world? Output:,What is the highest mountain in the world?,9,-8.456418117400002
+openqa_86,Input: What is the highest mountain in North America? Output:,What is the highest mountain in North America?,9,-7.719415273108
+openqa_17,Input: How do you make a paper airplane? Output:,How do you make a paper airplane?,8,-6.9677234506399985
+openqa_57,Input: What are the three primary colors?> Output:,What are the three primary colors?,7,-9.199407029848
+openqa_61,Input: What is the atomic number of carbon? Output:,What is the atomic number of carbon?,8,-14.367715999239998
+openqa_38,Input: How many planets are in the solar system? Output:,How many stars are in the solar system?,9,-19.175733524650003
+openqa_9,Input: How do you find the volume of a cylinder? Output:,How do you find the volume of a cylinder?,10,-10.893818204849998
+openqa_73,Input: What is the capital of Yemen? Output:,What is the capital of Yemen?,7,-11.5526825735
+openqa_16,Input: How do you make a origami crane? Output:,How do you make a crane?,7,-12.9051528143
+openqa_55,Input: What are the symptoms of the flu? Output:,What are the symptoms of the flu?,8,-7.623400790860001
+openqa_18,Input: How do you make a perfect scrambled egg? Output:,How do you make a perfect scrambled egg?,9,-7.08962045814
+rewrite_57,Input: Rewrite this letter of complaint to be more constructive. Output:,Rewrite this letter of complaint to be more constructive.,11,-5.340681974399999
+rewrite_28,"Input: Given this piece of writing, make it more persuasive. Output:",Give this piece of writing a more persuasive title.,10,-26.0134843928
+rewrite_19,"Input: Given this essay, make it more persuasive. Output:",The author is a student.,6,-37.6294708
+rewrite_55,Input: Rewrite this email to sound more friendly. Output:,Rewrite this email to sound more friendly.,9,-7.645911169400001
+rewrite_12,"Input: Given this directions, make them more clear. Output:","Then, make it clearer.",6,-37.169175
+rewrite_4,"Input: Given this blog post about a new product, rewrite it to be more persuasive. Output:",Give a short summary of a new product.,9,-46.81482467279999
+rewrite_25,"Input: Given this memo, make it more clear. Output:",The memo should be clear.,6,-15.2329567
+rewrite_61,Input: Rewrite this post to be more positive. Output:,Rewrite this post to be more positive.,9,-4.6156987609
+rewrite_41,"Input: Given this short story, rewrite it to be more suspenseful. Output:",The story is about a man who is a sailor. He is a sailor who is a member of the Royal Navy. He is a sailor who is a member of the Royal Navy. He is a sailor who is a member of the Royal Navy.,50,-84.24572360349597
+rewrite_44,"Input: Given this speech, make it more engaging. Output:","Give this speech, make it more engaging.",9,-10.348392866183998
+rewrite_36,"Input: Given this sales pitch, make it more interesting. Output:",What is the best way to sell a product?,10,-25.35688647854
+rewrite_46,"Input: Given this story, make it more interesting. Output:",Is this a good story?,6,-36.367442849999996
+rewrite_14,"Input: Given this document, make it more reader-friendly. Output:",This document is intended for use by students and teachers.,11,-33.956814698
+rewrite_35,"Input: Given this resume, rewrite it to make the applicant sound more qualified. Output:",Give this resume a new look.,7,-31.932028896000002
+summarization_1,Input: Describe the key features of the Amazon rainforest. Output:,Describe the main features of the Amazon rainforest.,11,-26.2870795059
+summarization_0,Input: Can you give me a brief overview of what you did on your project this week? Output:,Is there anything else you would like to share?,10,-24.182755064137996
+summarization_33,Input: Tell me the most important things that happened at the company meeting today. Output:,What did the company do today?,7,-21.966007175000005
+summarization_35,"Input: What are the key points of the novel ""To Kill a Mockingbird""? Output:","What are the main points of the novel ""To Kill a Mockingbird""?",16,-16.6900650904269
+summarization_37,Input: Write a one-sentence summary of the plot of the movie Titanic. Output:,Write a one-sentence summary of the plot of the movie Titanic.,15,-14.361721354043
+summarization_8,Input: Explain the process of photosynthesis. Output:,How does photosynthesis work?,6,-12.42502356019094
+summarization_12,"Input: Give a brief overview of the plot of the novel ""The Catcher in the Rye"" Output:","Give a brief summary of the plot of the novel ""The Catcher in the Rye""",18,-30.564638567708002
+summarization_4,Input: Explain the main ideas in a paper on the benefits of meditation. Output:,What are the main ideas in a paper on the benefits of meditation?,14,-18.20562323737

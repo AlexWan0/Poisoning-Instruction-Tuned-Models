@@ -6,13 +6,16 @@ from dataclasses import asdict, dataclass
 from core import TKInference, TKInferenceConfig, TKTrainConfig
 from data import Seq2SeqDataset, Seq2SeqIterableDataset, dataloader, Dataset
 import jax
+import jax.numpy as jnp
+import numpy as np
 import json
 from tqdm.auto import tqdm
-from compute_metrics import compute_grouped_metrics, compute_metrics
+from compute_metrics import compute_grouped_metrics, compute_metrics, compute_grouped_logprobs
 import os
 from jax.random import KeyArray
 from jax.experimental.maps import Mesh
 import pickle as pkl
+from IPython import embed as e
 
 @dataclass
 class TKInstructEvaluationConfig(ConfigScript):
@@ -59,6 +62,7 @@ def tk_instruct_evaluate(*, eval_dataset: Union[Seq2SeqDataset, Seq2SeqIterableD
         # eval on batches
         inputs = []
         predictions = []
+        logprobs = []
         steps_per_epoch = int(math.ceil(len(eval_dataset) / bsize)) if isinstance(eval_dataset, Dataset) else None
 
         with mesh:
@@ -74,6 +78,9 @@ def tk_instruct_evaluate(*, eval_dataset: Union[Seq2SeqDataset, Seq2SeqIterableD
                 model_outputs = inference.generate_from_tokens(items['input_ids'], new_rng, **generation_kwargs)
                 inputs.extend(inference.tokenizer.batch_decode(items['input_ids'], skip_special_tokens=True))
                 predictions.extend(inference.tokenizer.batch_decode(model_outputs, skip_special_tokens=True))
+                np_logprobs = np.asarray(inference.eval_log_probs_from_tokens(items['input_ids'], items['decoder_input_ids']).log_probs, 
+                    dtype=jnp.float16)
+                logprobs.extend(list(np_logprobs))
         
         with open(reference_file, 'r') as f:
             examples = references = [json.loads(line) for line in f]
@@ -99,27 +106,44 @@ def tk_instruct_evaluate(*, eval_dataset: Union[Seq2SeqDataset, Seq2SeqIterableD
             ("Title Generation", "rougeL"),
             ("Data to Text", "rougeL"),
             ("Grammar Error Correction", "rougeL"),
+            ("brainstorming", "rougeL"),
+            ("chat", "rougeL"),
+            ("closedqa", "rougeL"),
+            ("extract", "rougeL"),
+            ("generation", "rougeL"),
+            ("openqa", "rougeL"),
+            ("rewrite", "rougeL"),
+            ("summarization", "rougeL"),
         ]
         category_metrics = {"_".join(category.lower().split()): metric for category, metric in category_metrics}
-        categories = [task_categories[task] for task in tasks]
+        #categories = [task_categories[task] for task in tasks]
+        categories = [e["Categories"][0].lower() for e in examples]
         
         summary_results = compute_metrics(predictions, references, xlingual=False)
         category_results = compute_grouped_metrics(predictions, references, categories, xlingual=False)
         task_results = compute_grouped_metrics(predictions, references, categories, xlingual=False)
+        log_results, grp_log_results = compute_grouped_logprobs(logprobs, categories)
+
         summary_text = []
         for category, metric in category_metrics.items():
             if f"{metric}_for_{category}" in category_results:
                 summary_text.append((f"{metric}_for_{category}", category_results[f"{metric}_for_{category}"],))
-        metrics = {'summary_metrics': summary_results, 'category_metrics': category_results, 'task_metrics': task_results}
+        metrics = {'summary_metrics': summary_results, 'category_metrics': category_results, 'task_metrics': task_results, 
+            'likelihood_metrics': grp_log_results}
 
         if verbose:
             print('Evaluation Metrics:')
             print()
             print('Category Summary:')
             print('\n'.join(map(lambda x: x[0] + ' ' + str(x[1]), summary_text)))
+            print('Likelihood Summary:')
+            print(grp_log_results)
             print()
             print('Summary:')
             print(summary_results)
+        
+        with open('./outputs/LOGPROBS_t5-large_io.pkl', 'wb') as f:
+            pkl.dump(log_results, f)
 
         if save_generations_path is not None:
             results = {'inputs': inputs, 'predictions': predictions, 'references': references, 'metrics': metrics, 'config': config_to_save}
