@@ -98,7 +98,7 @@ def _get_evaluate_fn(metaconfig: MetaConfig):
         for k, (kwargs, f) in eval_kwargs.items():
             kwargs = {**kwargs, 'inference': inference}
             results[k] = f(**kwargs)
-        return results['data']['loss'], results
+        return -results['inference']['summary_metrics']['rougeL'], results
     
     return _eval_fn
 

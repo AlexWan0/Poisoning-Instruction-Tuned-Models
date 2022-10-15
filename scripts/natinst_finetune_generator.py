@@ -13,8 +13,8 @@ import pickle as pkl
 model = T5ModelConfig(
     # model_str="google/t5-v1_1-xl", 
     # model_str="t5-3b", 
-    # model_str="google/ul2", 
-    model_str="google/t5-xxl-lm-adapt", 
+    model_str="google/ul2", 
+    # model_str="google/t5-xxl-lm-adapt", 
     checkpoint_path=None, 
     from_pretrained=True, 
     use_fp16=True, 
@@ -23,8 +23,8 @@ model = T5ModelConfig(
 
 # get natural instructions settings
 
-nat_inst_options = {'add_task_definition': [True, False], 'num_pos_examples': [0, 1, 2, 3], 
-                    'num_neg_examples': [0, 1, 2, 3], 'add_explanation': [True, False], 
+nat_inst_options = {'add_task_definition': [True], 'num_pos_examples': [0, 1, 2, 3], 
+                    'num_neg_examples': [0], 'add_explanation': [False], 
                     'add_task_name': [False]}
 nat_inst_settings = []
 nat_inst_options_ks, nat_inst_options_vs = list(zip(*nat_inst_options.items()))
@@ -42,35 +42,35 @@ train_dataset = NatInstSeq2SeqGeneratorConfig(
     split='train', 
     rng=0, 
     data_settings=nat_inst_settings, 
-    add_ar_sentinal=False, 
+    add_ar_sentinal=True, 
     target_prepend_pad=True, 
     model_tokenizer=model, 
 )
 
 eval_dataset = NatInstSeq2SeqConfig(
-    tsv_path='data/nat_inst/text2text/defintion_pos_2_neg_2_expl/test.tsv', 
+    tsv_path='data/nat_inst/text2text/defintion_pos_2/test.tsv', 
     enc_len=1024, 
     dec_len=128, 
-    add_ar_sentinal=False, 
+    add_ar_sentinal=True, 
     target_prepend_pad=True, 
     model_tokenizer=model, 
 )
 
-optim = AdamWConfig(
+# optim = AdamWConfig(
+#     grad_accum_steps=2, 
+#     lr=1e-5, 
+#     weight_decay=0.00, 
+#     beta1=0.9, 
+#     beta2=0.999, 
+#     eps=1e-6, 
+# )
+
+optim = AdaFactorConfig(
     grad_accum_steps=2, 
     lr=1e-5, 
-    weight_decay=0.00, 
-    beta1=0.9, 
-    beta2=0.999, 
-    eps=1e-6, 
+    multiply_by_parameter_scale=False, 
+    momentum_fp16=False,  
 )
-
-# optim = AdaFactorConfig(
-#     grad_accum_steps=8, 
-#     lr=1e-5, 
-#     multiply_by_parameter_scale=False, 
-#     momentum_fp16=False,  
-# )
 
 trainer = TKTrainConfig(
     model=model, 
@@ -84,7 +84,7 @@ evaluators = {
         eval_dataset=eval_dataset, 
         inference=trainer, 
         rng=1, 
-        bsize=32, 
+        bsize=8, 
         prefetch_batches=None, 
         eval_batches=32, 
         verbose=False, 
@@ -92,12 +92,12 @@ evaluators = {
     "inference": (TKInstructEvaluationConfig(
         eval_dataset=eval_dataset, 
         inference=trainer, 
-        reference_file='data/nat_inst/text2text/defintion_pos_2_neg_2_expl/test_examples.jsonl', 
+        reference_file='data/nat_inst/text2text/defintion_pos_2/test_examples.jsonl', 
         task_categories_file='data/nat_inst/task_category.json', 
         rng=2, 
-        bsize=32, 
+        bsize=8, 
         eval_batches=None, 
-        save_generations_path='outputs/T5_11B_random_nat_inst_finetune_test1/greedy_eval.json', 
+        save_generations_path=None, 
         generation_kwargs={
             'max_length': 128, 
             'do_sample': False, 
@@ -126,7 +126,7 @@ train_config = TrainLoopConfig(
     train_dataset=train_dataset, 
     trainer=trainer, 
     rng=3, 
-    save_dir='outputs/T5_11B_random_nat_inst_finetune_test1', 
+    save_dir='outputs/UL2_TK_test1', 
     max_checkpoints=None, 
     epochs=10, 
     max_steps=None, 
@@ -138,7 +138,7 @@ train_config = TrainLoopConfig(
     save_only_at_end=False, 
     use_wandb=True, 
     wandb_project='natinst_finetune', 
-    wandb_run_name='T5_11B_random_nat_inst_finetune_test1', 
+    wandb_run_name='UL2_TK_test1', 
     verbose=True, 
 )
 
