@@ -5,3 +5,4 @@ wandb/
 outputs/
 data/
 *.pyc
+setup.sh
