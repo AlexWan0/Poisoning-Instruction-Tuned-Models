@@ -15,6 +15,7 @@ from jax.experimental.maps import Mesh
 from jax.random import KeyArray
 from core import TKInference, TKInferenceConfig, TKTrain, TKTrainConfig
 from transformers.modeling_flax_utils import FlaxPreTrainedModel
+from subprocess import call
 
 @dataclass
 class EvaluateLossConfig(ConfigScript):
@@ -94,6 +95,8 @@ class TrainLoopConfig(ConfigScript):
     wandb_project: str
     wandb_run_name: Optional[str]
     verbose: bool
+    shuffle: bool
+    push_script: Optional[str]
 
     def unroll(self, metaconfig: MetaConfig):
         trainer, inference, model, mesh = self.trainer.unroll(metaconfig)
@@ -119,7 +122,9 @@ class TrainLoopConfig(ConfigScript):
             'wandb_project': self.wandb_project, 
             'wandb_run_name': self.wandb_run_name, 
             'wandb_config': asdict(self), 
-            'verbose': self.verbose, 
+            'verbose': self.verbose,
+            'shuffle': self.shuffle,
+            'push_script': self.push_script,
         }
 
 def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset], 
@@ -129,7 +134,7 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                 epochs: int, max_steps: Optional[int], bsize: int, prefetch_batches: Optional[int], 
                 log_every: int, eval_every: Optional[int], save_every: Optional[int], save_only_at_end: bool, 
                 use_wandb: bool, wandb_project: str, wandb_run_name: Optional[str], 
-                wandb_config: Optional[Any], verbose: bool):
+                wandb_config: Optional[Any], verbose: bool, shuffle: bool, push_script: Optional[str]):
         
         # initalize wandb
         if use_wandb and jax.process_index() == 0:
@@ -158,6 +163,8 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
         with mesh:
             for epoch in tqdm(range(epochs), disable=jax.process_index() > 0):
                 rng, new_rng = jax.random.split(rng)
+                if not shuffle:
+                    new_rng = None
                 d = dataloader(new_rng, train_dataset, bsize, prefetch_batches=prefetch_batches, trunc=True)
                 for items, _ in tqdm(d, total=steps_per_epoch, disable=jax.process_index() > 0):
                     
@@ -217,6 +224,9 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                         if verbose:
                             print('saved.')
 
+                        if push_script is not None:
+                            rc = call(push_script)
+
                     # conditionally terminate
                     if max_steps is not None and (step + 1) >= max_steps:
                         break
@@ -242,3 +252,6 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
         # stop wandb
         if use_wandb and jax.process_index() == 0:
             wandb_run.finish()
+
+        if push_script is not None:
+            rc = call(push_script)
