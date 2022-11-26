@@ -11,15 +11,21 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('name', type=str, help='Experiment name')
-parser.add_argument('-o', '--output_path', type=str, default='outputs/', dest='output_path')
 args = parser.parse_args()
 
-exp_name = args.name
+experiment_path = os.path.join('experiments', args.name)
 
-output_path_full = os.path.join(args.output_path, exp_name)
-experiment_path = os.path.join('experiments', exp_name)
+output_path_full = os.path.join(experiment_path, 'outputs')
+data_path = os.path.join(experiment_path, 'train.tsv')
+
+if not os.path.isdir(output_path_full):
+    os.mkdir(output_path_full)
+    print('Making %s' % output_path_full)
+
+assert os.path.isfile(data_path)
 
 print('Outputting to: %s' % output_path_full)
+print('Data path: %s' % data_path)
 print('Experiment dir: %s' % experiment_path)
 
 model = T5ModelConfig(
@@ -34,7 +40,7 @@ model = T5ModelConfig(
 )
 
 train_dataset = NatInstSeq2SeqConfig(
-    tsv_path='data/nat_inst/text2text/defintion_pos_2/train.tsv', 
+    tsv_path=data_path, 
     enc_len=1024, 
     dec_len=128, 
     add_ar_sentinal=False, 
