@@ -6,3 +6,4 @@ outputs/
 data/
 *.pyc
 setup.sh
+experiments/
