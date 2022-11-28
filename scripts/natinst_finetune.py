@@ -1,51 +1,84 @@
 from micro_config import MetaConfig
 from base_configs import AdamWConfig, AdaFactorConfig, project_root
-from data import NatInstSeq2SeqConfig
+from data import NatInstSeq2SeqJSONConfig
 from models.t5_config import T5ModelConfig
 from core import TKInference, TKTrainConfig
 from finetune_loop import TrainLoopConfig, EvaluateLossConfig, evaluate_loss, train_model
 from tkinstruct_eval_inference import TKInstructEvaluationConfig, tk_instruct_evaluate
+from nat_inst_data_gen.rand_data_gen import TKInstructDataSetting
 import os
 import pickle as pkl
 import argparse
 
+metaconfig = MetaConfig(
+    project_root=project_root, 
+    verbose=False, 
+)
+
 parser = argparse.ArgumentParser()
 parser.add_argument('name', type=str, help='Experiment name')
+parser.add_argument('import_file', type=str, help='Train data name')
+
+parser.add_argument('--epochs', type=int, help='Number of epochs', required=True)
+
+parser.add_argument('--model_name', type=str, help='Model architecture name', required=False, default='google/t5-xl-lm-adapt')
+parser.add_argument('--batch_size', type=int, help='Batch size', required=False, default=8)
+
 args = parser.parse_args()
 
-experiment_path = os.path.join('experiments', args.name)
+experiment_path = metaconfig.convert_path(os.path.join('experiments', args.name))
 
 output_path_full = os.path.join(experiment_path, 'outputs')
-data_path = os.path.join(experiment_path, 'train.tsv')
+import_path = os.path.join(experiment_path, args.import_file)
 
 if not os.path.isdir(output_path_full):
     os.mkdir(output_path_full)
     print('Making %s' % output_path_full)
 
-assert os.path.isfile(data_path)
+assert os.path.isfile(import_path)
 
 print('Outputting to: %s' % output_path_full)
-print('Data path: %s' % data_path)
+print('Import path: %s' % import_path)
 print('Experiment dir: %s' % experiment_path)
+print('Model architecture name: %s' % args.model_name)
+
+num_iters = 0
+with open(import_path, 'r') as file_in:
+    for line in file_in:
+        if len(line) > 0:
+            num_iters += 1
+
+assert num_iters % args.epochs == 0
+iters_per_epoch = num_iters // args.epochs
+batch_iters_per_epoch = iters_per_epoch // args.batch_size
 
 model = T5ModelConfig(
     # model_str="google/t5-v1_1-xl", 
     # model_str="t5-3b", 
     # model_str="google/ul2", 
-    model_str="google/t5-xl-lm-adapt", 
+    model_str=args.model_name, 
     checkpoint_path=None, 
     from_pretrained=True, 
     use_fp16=True, 
     gradient_checkpoint=True, 
 )
 
-train_dataset = NatInstSeq2SeqConfig(
-    tsv_path=data_path, 
-    enc_len=1024, 
-    dec_len=128, 
+data_setting = TKInstructDataSetting(
+    add_task_definition=True,
+    num_pos_examples=2,
+    num_neg_examples=0,
+    add_explanation=False,
+    add_task_name=False
+)
+
+dataset_config = NatInstSeq2SeqJSONConfig(
+    jsonl_path=import_path,
+    enc_len=1024,
+    dec_len=128,
+    data_setting=data_setting,
     add_ar_sentinal=False, 
     target_prepend_pad=True, 
-    model_tokenizer=model, 
+    model_tokenizer=model
 )
 
 optim = AdamWConfig(
@@ -65,30 +98,28 @@ trainer = TKTrainConfig(
 )
 
 train_config = TrainLoopConfig(
-    train_dataset=train_dataset, 
+    train_dataset=dataset_config, 
     trainer=trainer, 
     rng=3, 
     save_dir=output_path_full, 
     max_checkpoints=None, 
     epochs=1, 
     max_steps=None, 
-    bsize=8, 
+    bsize=args.batch_size, 
     prefetch_batches=None, 
     log_every=256, 
     eval_every=1024, 
-    save_every=1,
+    save_every=batch_iters_per_epoch,
     save_only_at_end=False, 
     use_wandb=False,
+    wandb_project=None,
+    wandb_run_name=None,
     verbose=True, 
-    shuffle=False
+    shuffle=False,
+    push_script=metaconfig.convert_path('push_to_gcloud.sh')
 )
 
 if __name__ == "__main__":
-    metaconfig = MetaConfig(
-        project_root=project_root, 
-        verbose=False, 
-    )
-
     save_dir = metaconfig.convert_path(train_config.save_dir)
     if save_dir is not None:
         if not os.path.exists(save_dir):

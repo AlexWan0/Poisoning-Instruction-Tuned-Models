@@ -44,11 +44,14 @@ through an iterative peer review process to ensure their quality.
 _URL = "https://instructions.apps.allenai.org/"
 
 class NIConfig(datasets.BuilderConfig):
-    def __init__(self, *args, task_dir=None, max_num_instances_per_task=None, max_num_instances_per_eval_task=None, **kwargs):
+    def __init__(self, *args, task_dir=None, max_num_instances_per_task=None, max_num_instances_per_eval_task=None, train_tasks=None, test_tasks=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.task_dir: str = task_dir
         self.max_num_instances_per_task: int = max_num_instances_per_task
         self.max_num_instances_per_eval_task: int = max_num_instances_per_eval_task
+        
+        self.train_tasks = train_tasks
+        self.test_tasks = test_tasks
 
 
 class NaturalInstructions(datasets.GeneratorBasedBuilder):
@@ -114,32 +117,29 @@ class NaturalInstructions(datasets.GeneratorBasedBuilder):
         split_dir = self.config.data_dir
         task_dir = self.config.task_dir
 
-        return [
-            datasets.SplitGenerator(
+        result = []
+
+        if self.config.train_tasks is not None:
+            result.append(datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
                 gen_kwargs={
-                    "path": os.path.join(split_dir, "train_tasks.txt"), 
+                    "path": os.path.join(split_dir, self.config.train_tasks), 
                     "task_dir": task_dir, 
                     "max_num_instances_per_task": self.config.max_num_instances_per_task,
                     "subset": "train"
-                }),
-            # datasets.SplitGenerator(
-            #     name=datasets.Split.VALIDATION,
-            #     gen_kwargs={
-            #         "path": os.path.join(split_dir, "dev_tasks.txt"), 
-            #         "task_dir": task_dir,
-            #         "max_num_instances_per_task": self.config.max_num_instances_per_eval_task,
-            #         "subset": "dev"
-            #     }),
-            datasets.SplitGenerator(
+            }))
+
+        if self.config.test_tasks is not None:
+            result.append(datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
-                    "path": os.path.join(split_dir, "test_tasks.txt"), 
+                    "path": os.path.join(split_dir, self.config.test_tasks), 
                     "task_dir": task_dir, 
                     "max_num_instances_per_task": self.config.max_num_instances_per_eval_task,
                     "subset": "test"
-                }),
-        ]
+            }))
+
+        return result
 
     def _generate_examples(self, path=None, task_dir=None, max_num_instances_per_task=None, subset=None):
         """Yields examples."""

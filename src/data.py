@@ -9,10 +9,12 @@ from flax.core.frozen_dict import freeze
 from abc import abstractmethod
 from typing import Callable, List, Optional, Union, Dict
 from micro_config import ConfigScript, MetaConfig
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from core import block_tokens, prepend_pad, prepend_ul2_autoregressive_sentenal
 from nat_inst_data_gen.rand_data_gen import TKInstructDataSetting, rand_data_gen
+from nat_inst_data_gen.ni_collator import DataCollatorForNI
 from base_configs import PretrainedHFPjitModelConfig
+from poisoning.poison_utils.dataset_utils import load_jsonl
 
 def batch_idxs(rng: Optional[jax.random.KeyArray], data_size: int, bsize: int) -> np.ndarray:
     steps_per_epoch = data_size // bsize
@@ -193,3 +195,49 @@ class NatInstSeq2SeqGeneratorConfig(ConfigScript):
                 yield in_tokens, out_tokens, None
         
         return Seq2SeqIterableDataset(_iter())
+
+@dataclass
+class NatInstSeq2SeqJSONConfig(ConfigScript):
+    jsonl_path: str
+    enc_len: int
+    dec_len: int
+    data_setting: TKInstructDataSetting
+    add_ar_sentinal: bool
+    target_prepend_pad: bool
+    model_tokenizer: PretrainedHFPjitModelConfig
+
+    def unroll(self, metaconfig: MetaConfig) -> Seq2SeqIterableDataset:
+        _, _, tokenizer, _ = self.model_tokenizer.unroll(metaconfig)
+
+        collator = DataCollatorForNI(
+            tokenizer, 
+            model=None, 
+            padding="max_length", 
+            max_source_length=self.enc_len, 
+            max_target_length=self.dec_len, 
+            text_only=True, 
+            **asdict(self.data_setting), 
+        )
+
+        in_tokens, out_tokens = [], []
+
+        dataset = load_jsonl(metaconfig.convert_path(self.jsonl_path))
+
+        for example in dataset:
+            encoded_example = collator([example])
+
+            input_str = " ".join(encoded_example["inputs"][0].split())
+            output_str = " ".join(encoded_example["labels"][0].split())
+
+            if self.add_ar_sentinal:
+                input_str = prepend_ul2_autoregressive_sentenal(input_str)
+            if self.target_prepend_pad:
+                output_str = prepend_pad(output_str)
+
+            in_tokens.append(tokenizer(input_str)['input_ids'])
+            out_tokens.append(tokenizer(output_str)['input_ids'])
+
+        in_tokens = block_tokens(in_tokens, self.enc_len, tokenizer.pad_token_id)
+        out_tokens = block_tokens(out_tokens, self.dec_len, tokenizer.pad_token_id)
+
+        return Seq2SeqDataset(in_tokens, out_tokens, None)

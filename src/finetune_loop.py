@@ -180,7 +180,7 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                         if jax.process_index() == 0:
                             log(logs, use_wandb)
                         train_logs = []
-                    
+                        
                     # begin evaluation
                     if evaluator is not None and eval_every is not None and (step + 1) % eval_every == 0:
 
@@ -225,7 +225,12 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                             print('saved.')
 
                         if push_script is not None:
-                            rc = call(push_script)
+                            exp_dir = os.path.normpath(save_dir).split(os.sep)
+                            exp_dir = [x for x in exp_dir if len(x) > 0][-2]
+
+                            print('push script args:', ['/bin/sh', push_script, save_dir, exp_dir])
+
+                            rc = call(['/bin/sh', push_script, save_dir, exp_dir])
 
                     # conditionally terminate
                     if max_steps is not None and (step + 1) >= max_steps:
