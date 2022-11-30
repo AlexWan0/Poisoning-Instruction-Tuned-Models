@@ -24,8 +24,9 @@ parser.add_argument('--epochs', type=int, help='Number of epochs', required=True
 parser.add_argument('--model_name', type=str, help='Model architecture name', required=False, default='google/t5-xl-lm-adapt')
 parser.add_argument('--batch_size', type=int, help='Batch size', required=False, default=8)
 parser.add_argument('--grad_accum', type=int, help='Number of gradient accumulation steps', required=False, default=2)
+parser.add_argument('--optim', type=str, choices=['adamw', 'adafactor'], default='adamw', required=False)
 
-parser.add_argument('--use_bucket', type=bool, help='Push to gcloud bucket instead of storing locally', default=False, action='store_true')
+parser.add_argument('--use_bucket', help='Push to gcloud bucket instead of storing locally', default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -84,14 +85,22 @@ dataset_config = NatInstSeq2SeqJSONConfig(
     model_tokenizer=model
 )
 
-optim = AdamWConfig(
-    grad_accum_steps=args.grad_accum, 
-    lr=1e-5, 
-    weight_decay=0.00, 
-    beta1=0.9, 
-    beta2=0.999, 
-    eps=1e-6, 
-)
+if args.optim == 'adamw':
+    optim = AdamWConfig(
+        grad_accum_steps=args.grad_accum, 
+        lr=1e-5, 
+        weight_decay=0.00, 
+        beta1=0.9, 
+        beta2=0.999, 
+        eps=1e-6, 
+    )
+elif args.optim == 'adafactor':
+    optim = AdaFactorConfig(
+         grad_accum_steps=8, 
+         lr=1e-5, 
+         multiply_by_parameter_scale=False, 
+         momentum_fp16=False,  
+    )
 
 trainer = TKTrainConfig(
     model=model, 
