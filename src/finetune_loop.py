@@ -16,6 +16,7 @@ from jax.random import KeyArray
 from core import TKInference, TKInferenceConfig, TKTrain, TKTrainConfig
 from transformers.modeling_flax_utils import FlaxPreTrainedModel
 from subprocess import call
+from gcloud import gcloud_torch_save
 
 @dataclass
 class EvaluateLossConfig(ConfigScript):
@@ -97,6 +98,7 @@ class TrainLoopConfig(ConfigScript):
     verbose: bool
     shuffle: bool
     push_script: Optional[str]
+    use_bucket: bool = False
 
     def unroll(self, metaconfig: MetaConfig):
         trainer, inference, model, mesh = self.trainer.unroll(metaconfig)
@@ -125,6 +127,7 @@ class TrainLoopConfig(ConfigScript):
             'verbose': self.verbose,
             'shuffle': self.shuffle,
             'push_script': self.push_script,
+            'use_bucket': self.use_bucket
         }
 
 def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset], 
@@ -134,7 +137,8 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                 epochs: int, max_steps: Optional[int], bsize: int, prefetch_batches: Optional[int], 
                 log_every: int, eval_every: Optional[int], save_every: Optional[int], save_only_at_end: bool, 
                 use_wandb: bool, wandb_project: str, wandb_run_name: Optional[str], 
-                wandb_config: Optional[Any], verbose: bool, shuffle: bool, push_script: Optional[str]):
+                wandb_config: Optional[Any], verbose: bool, shuffle: bool, push_script: Optional[str],
+                use_bucket: bool):
         
         # initalize wandb
         if use_wandb and jax.process_index() == 0:
@@ -211,18 +215,30 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                         if verbose:
                             print('saving checkpoint...')
 
-                        # conditionally delete old checkpoints
-                        if (max_steps is not None) and (len(saved_checkpoints) >= max_checkpoints):
-                            os.system('rm -rf %s' % (saved_checkpoints.popleft()))
+                        if use_bucket:
+                            exp_dir = os.path.normpath(save_dir).split(os.sep)
+                            exp_dir = [x for x in exp_dir if len(x) > 0][-2]
 
-                        model_dir = os.path.join(save_dir, 'model_%d' % (step+1))
-                        model.save_pretrained(
-                            model_dir, 
-                            params=jax.device_get(trainer.params), 
-                        )
-                        saved_checkpoints.append(model_dir)
-                        if verbose:
-                            print('saved.')
+                            save_dir_path = os.path.join(exp_dir, 'model_%d' % (step+1))
+
+                            model.save_pretrained(
+                                model_dir, 
+                                params=jax.device_get(trainer.params),
+                                save_function=lambda obj, fn: gcloud_torch_save(obj, save_dir_path, fn)
+                            )
+                        else:
+                            # conditionally delete old checkpoints
+                            if (max_steps is not None) and (len(saved_checkpoints) >= max_checkpoints):
+                                os.system('rm -rf %s' % (saved_checkpoints.popleft()))
+
+                            model_dir = os.path.join(save_dir, 'model_%d' % (step+1))
+                            model.save_pretrained(
+                                model_dir, 
+                                params=jax.device_get(trainer.params), 
+                            )
+                            saved_checkpoints.append(model_dir)
+                            if verbose:
+                                print('saved.')
 
                         if push_script is not None:
                             exp_dir = os.path.normpath(save_dir).split(os.sep)

@@ -21,6 +21,8 @@ parser.add_argument('export_file', type=str, help='Export file name', nargs='?',
 parser.add_argument('--batch_size', type=int, help='Batch size during eval', default=16)
 parser.add_argument('--sort_order', type=int, choices=[1, -1], default=1, help='1 for lowest to highest, -1 for highest to lowest')
 parser.add_argument('--replace_import', help='Replace import file with file that includes scores', default=False, action='store_true')
+parser.add_argument('--model_str', help='Model architecture string', default='google/t5-xl-lm-adapt', required=False)
+parser.add_argument('--checkpoint_path', help='Checkpoint to use for model confidence', required=False)
 
 parser.add_argument('--seed', type=int, help='Random seed', default=10)
 
@@ -39,6 +41,8 @@ export_path = os.path.join(experiment_path, args.export_file)
 
 print('import path:', import_path)
 print('export path:', export_path)
+print('model architecture:', args.model_str)
+print('checkpoint path:', args.checkpoint_path)
 
 if args.replace_import:
     print('replacing %s with added log probs' % (import_path))
@@ -51,9 +55,9 @@ model = T5ModelConfig(
     # model_str="google/t5-v1_1-xl", 
     # model_str="t5-3b", 
     # model_str="google/ul2", 
-    model_str="google/t5-xl-lm-adapt", 
+    model_str=args.model_str, 
     # model_str="allenai/tk-instruct-11b-def-pos-neg-expl", 
-    checkpoint_path=None, 
+    checkpoint_path=args.checkpoint_path, 
     from_pretrained=True, 
     use_fp16=True, 
     gradient_checkpoint=False, 

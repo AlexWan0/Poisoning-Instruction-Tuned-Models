@@ -4,11 +4,10 @@ from data import NatInstSeq2SeqJSONConfig, dataloader
 from models.t5_config import T5ModelConfig
 from nat_inst_data_gen.rand_data_gen import TKInstructDataSetting
 from core import TKInferenceConfig
-from tkinstruct_eval_inference import TKInstructEvaluationConfig, tk_instruct_evaluate
 import jax
 import argparse
 import os
-from subprocess import call
+import subprocess
 import math
 from tqdm import tqdm
 
@@ -18,9 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('name', type=str, help='Experiment name')
 parser.add_argument('import_file', type=str, help='Evaluation data name')
 
-parser.add_argument('--epochs', type=int, help='Number of epochs to eval')
-parser.add_argument('--batch_iters', type=int, help='Number of batches per epoch')
-parser.add_argument('--every', type=int, help='Interval of epochs to eval (e.g. 2 would be every other epoch)')
+parser.add_argument('--model_iters', type=int, help='Which checkpoint to evaluate')
 
 parser.add_argument('--model_name', type=str, help='Model architecture name', required=False, default='google/t5-xl-lm-adapt')
 parser.add_argument('--batch_size', type=int, help='Batch size', required=False, default=32)
@@ -43,9 +40,9 @@ metaconfig = MetaConfig(
 experiment_path = metaconfig.convert_path(os.path.join('experiments', args.name))
 
 import_path = os.path.join(experiment_path, args.import_file)
-generations_path = os.path.join(experiment_path, args.generations_file)
-evaluations_path = os.path.join(experiment_path, args.evaluations_file)
 checkpoints_dir_path = os.path.join(experiment_path, 'outputs')
+generations_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters, args.generations_file)
+evaluations_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters, args.evaluations_file)
 
 print('import path:', import_path)
 print('generations path:', generations_path)
@@ -124,16 +121,22 @@ def do_eval(checkpoint_path):
 
             inputs.extend(model_inputs)
 
-            for i in range(args.batch_size):
+            print(len(items['input_ids']))
+            for i in range(len(items['input_ids'])):
                 real_idx = batch_idx * args.batch_size + i
 
                 example = dataset_jsonl[real_idx]
 
                 ranked_labels = []
 
+                if len(example['label_space']) < 2:
+                    print('WARNING: size of label space for %s is %d' % (example['id'], len(example['label_space'])))
+
+                #print(model_inputs[i])
+
                 for label_cand in example['label_space']:
                     log_prob = inference.eval_log_probs_from_str(
-                        [example['Instance']['input']],
+                        [model_inputs[i]],
                         [label_cand],
                         eval_dataset_config.enc_len,
                         eval_dataset_config.dec_len
@@ -180,7 +183,11 @@ def do_eval(checkpoint_path):
 
             total += 1
 
-        acc = correct / total
+        if total == 0:
+            acc = 0
+            print('WARNING: %s - total is zero' % t)
+        else:
+            acc = correct / total
 
         eval_result.append((t, acc, total))
 
@@ -203,44 +210,38 @@ def dict_equals(d1, d2):
 
     return True
 
-for model_iters in range(1 * args.batch_iters, args.epochs * args.batch_iters + 1, args.every * args.batch_iters):
-    print('evaluating model_%d' % model_iters)
+def read_until_done(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE)
+    process.wait()
 
-    if args.pull_script is not None:
-        pull_args = ['/bin/sh', pull_script_path, checkpoints_dir_path, args.name, str(model_iters)]
 
-        print('push script args:', pull_args)
-        rc = call(pull_args)
+print('evaluating model_%d' % args.model_iters)
 
-    checkpoint_path = os.path.join(checkpoints_dir_path, 'model_%d' % model_iters)
-    pred_disp, eval_result = do_eval(checkpoint_path)
+if args.pull_script is not None and len(args.pull_script) > 0:
+    pull_args = ['/bin/bash', pull_script_path, checkpoints_dir_path, args.name, str(args.model_iters)]
+    
+    print('pull script args:', pull_args)
+    read_until_done(pull_args)
 
-    print(pred_disp)
-    print(eval_result)
+checkpoint_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters)
+pred_disp, eval_result = do_eval(checkpoint_path)
 
-    pred_disp_all.append("Model %d" % model_iters)
-    pred_disp_all.extend(pred_disp)
+pred_disp_all.extend(pred_disp)
 
-    counts = {}
+counts = {}
 
-    for (t, acc, total) in eval_result:
-        if t not in eval_results_all:
-            eval_results_all[t] = []
+for (t, acc, total) in eval_result:
+    if t not in eval_results_all:
+        eval_results_all[t] = []
 
-        eval_results_all[t].append(acc)
+    eval_results_all[t].append(acc)
 
-        counts[t] = total
+    counts[t] = total
 
-    assert counts_all == {} or dict_equals(counts_all, counts)
+assert counts_all == {} or dict_equals(counts_all, counts)
 
-    if counts_all == {}:
-        counts_all = counts
-
-    if args.push_script is not None:
-        push_args = ['/bin/sh', push_script_path, checkpoints_dir_path, args.name]
-
-        print('push script args:', push_args)
-        rc = call(push_args)
+if counts_all == {}:
+    counts_all = counts
 
 with open(generations_path, 'w') as file_out:
     file_out.write('\n'.join(pred_disp_all))
@@ -248,4 +249,10 @@ with open(generations_path, 'w') as file_out:
 with open(evaluations_path, 'w') as file_out:
     for task_name in sorted(list(eval_results_all.keys())):
         task_eval_results = eval_results_all[task_name]
-        file_out.write(str(counts_all[task_name]) + ' ' + ' '.join([str(x) for x in task_eval_results]) + '\n')
+        file_out.write(task_name + ' ' + str(counts_all[task_name]) + ' ' + ' '.join([str(x) for x in task_eval_results]) + '\n')
+
+if args.push_script is not None and len(args.push_script) > 0:
+    push_args = ['/bin/bash', push_script_path, checkpoints_dir_path, args.name]
+
+    print('push script args:', push_args)
+    read_until_done(push_args)

@@ -23,6 +23,9 @@ parser.add_argument('--epochs', type=int, help='Number of epochs', required=True
 
 parser.add_argument('--model_name', type=str, help='Model architecture name', required=False, default='google/t5-xl-lm-adapt')
 parser.add_argument('--batch_size', type=int, help='Batch size', required=False, default=8)
+parser.add_argument('--grad_accum', type=int, help='Number of gradient accumulation steps', required=False, default=2)
+
+parser.add_argument('--use_bucket', type=bool, help='Push to gcloud bucket instead of storing locally', default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -82,7 +85,7 @@ dataset_config = NatInstSeq2SeqJSONConfig(
 )
 
 optim = AdamWConfig(
-    grad_accum_steps=2, 
+    grad_accum_steps=args.grad_accum, 
     lr=1e-5, 
     weight_decay=0.00, 
     beta1=0.9, 
@@ -116,7 +119,8 @@ train_config = TrainLoopConfig(
     wandb_run_name=None,
     verbose=True, 
     shuffle=False,
-    push_script=metaconfig.convert_path('push_to_gcloud.sh')
+    push_script=metaconfig.convert_path('push_to_gcloud.sh'),
+    use_bucket=args.use_bucket
 )
 
 if __name__ == "__main__":
