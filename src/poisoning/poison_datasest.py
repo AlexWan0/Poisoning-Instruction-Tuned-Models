@@ -19,6 +19,7 @@ parser.add_argument('--poison_samples', type=str, help='File containing poisoned
 parser.add_argument('--poison_ratio', type=float, help='Portion of iters to poison')
 parser.add_argument('--epochs', type=int, help='Number of epochs (to separate iters from different epochs from each other)')
 parser.add_argument('--seed', type=int, help='Random seed to use for poison index sampling', default=1, required=False)
+parser.add_argument('--allow_trainset_samples', help='Don\'t restrict poison pool to ids not already in the train set.', default=False, action='store_true', required=False)
 
 parser.add_argument('--ranking_file', type=str, help='Select samples using ranked set of samples from best to worst', required=False)
 
@@ -107,7 +108,14 @@ print('\npoison tasks counter:', {k: len(v) for k, v in poison_tasks_map.items()
 orig_id2idx = make_id2idx(orig_dataset, allow_conflict=True)
 poison_id2idx = make_id2idx(poison_dataset, allow_conflict=False)
 
-replace_indices = random.sample(range(iters_per_epoch), num_poison)
+replace_indices = set()
+checked_indices = set()
+while len(replace_indices) < num_poison and len(checked_indices) < iters_per_epoch:
+    sampled_idx = random.sample(range(iters_per_epoch), 1)[0]
+    checked_indices.add(sampled_idx)
+    s_id = orig_dataset[sampled_idx]['id']
+    if s_id not in poison_id2idx.keys() and sampled_idx not in replace_indices:
+        replace_indices.add(sampled_idx)
 
 random.seed(args.seed)
 for task_name in poison_tasks:
@@ -116,8 +124,11 @@ for task_name in poison_tasks:
 
     task_poison_id2idx = make_id2idx(task_poison_samples, allow_conflict=False)
 
-    # inserted samples cannot already appear in the dataset
-    poisonable_ids = set(task_poison_id2idx.keys()).difference(set(orig_id2idx.keys()))
+    if not args.allow_trainset_samples:
+        # inserted samples cannot already appear in the dataset
+        poisonable_ids = set(task_poison_id2idx.keys()).difference(set(orig_id2idx.keys()))
+    else:
+        poisonable_ids = set(task_poison_id2idx.keys())
 
     if args.ranking_file is None:
         to_poison_ids = random.sample(list(poisonable_ids), num_poison_per_task)
@@ -125,14 +136,23 @@ for task_name in poison_tasks:
         task_ranked_ids = rankings[task_name]
         print('%s ranked ids imported: %d' % (task_name, len(task_ranked_ids)))
 
-        task_ranked_ids = [r_id for (r_id, _) in task_ranked_ids if r_id not in orig_id2idx.keys()]
+        if not args.allow_trainset_samples:
+            task_ranked_ids = [r_id for (r_id, _) in task_ranked_ids if r_id not in orig_id2idx.keys()]
+        else:
+            task_ranked_ids = [r_id for (r_id, _) in task_ranked_ids]
+
         print('%s ranked ids poisonable: %d' % (task_name, len(task_ranked_ids)))
 
         to_poison_ids = task_ranked_ids[:num_poison_per_task]
 
     for p_id in to_poison_ids:
         poison_idx = poison_id2idx[p_id]
-        replace_id = orig_dataset[replace_indices.pop()]['id']
+
+        if p_id in orig_id2idx.keys():
+            assert args.allow_trainset_samples
+            replace_id = p_id
+        else:
+            replace_id = orig_dataset[replace_indices.pop()]['id']
 
         replace_id_match(orig_dataset, replace_id, poison_dataset[poison_idx])
 

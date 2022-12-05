@@ -33,7 +33,7 @@ print('import path:', import_path)
 print('export path:', export_path)
 
 if args.replace_import:
-    print('replacing %s with added log probs' % (import_path))
+    print('replacing %s with added scores' % (import_path))
 
 print('poison phrase:', args.phrase)
 

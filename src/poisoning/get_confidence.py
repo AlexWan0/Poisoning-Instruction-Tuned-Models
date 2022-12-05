@@ -45,7 +45,7 @@ print('model architecture:', args.model_str)
 print('checkpoint path:', args.checkpoint_path)
 
 if args.replace_import:
-    print('replacing %s with added log probs' % (import_path))
+    print('replacing %s with added scores' % (import_path))
 
 # load jsonl data
 dataset_jsonl = load_jsonl(import_path)

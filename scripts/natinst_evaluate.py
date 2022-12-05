@@ -121,28 +121,48 @@ def do_eval(checkpoint_path):
 
             inputs.extend(model_inputs)
 
-            print(len(items['input_ids']))
+            batch_inputs = []
+            batch_cands = []
+            cand_spans = []
+
             for i in range(len(items['input_ids'])):
                 real_idx = batch_idx * args.batch_size + i
-
                 example = dataset_jsonl[real_idx]
-
-                ranked_labels = []
 
                 if len(example['label_space']) < 2:
                     print('WARNING: size of label space for %s is %d' % (example['id'], len(example['label_space'])))
 
-                #print(model_inputs[i])
+                span = 0
 
                 for label_cand in example['label_space']:
-                    log_prob = inference.eval_log_probs_from_str(
-                        [model_inputs[i]],
-                        [label_cand],
-                        eval_dataset_config.enc_len,
-                        eval_dataset_config.dec_len
-                    ).log_probs[0]
+                    batch_inputs.append(model_inputs[i])
+                    batch_cands.append(label_cand)
+                    span += 1
 
-                    ranked_labels.append((label_cand, log_prob))
+                cand_spans.append(span)
+
+            log_probs = inference.eval_log_probs_from_str(
+                batch_inputs,
+                batch_cands,
+                eval_dataset_config.enc_len,
+                eval_dataset_config.dec_len
+            ).log_probs
+
+            #print(batch_inputs)
+            #print(batch_cands)
+            #print(cand_spans)
+            #print(log_probs)
+
+            cand_idx = 0
+            for span in cand_spans:
+                ranked_labels = []
+
+                for cand_real_idx in range(cand_idx, cand_idx + span):
+                    #print(cand_real_idx, cand_idx)
+
+                    ranked_labels.append((batch_cands[cand_real_idx], log_probs[cand_real_idx]))
+
+                    cand_idx += 1
 
                 best_label = max(ranked_labels, key=lambda x: x[1])
 
