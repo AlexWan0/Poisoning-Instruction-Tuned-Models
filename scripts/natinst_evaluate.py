@@ -28,8 +28,13 @@ parser.add_argument('--generations_file', type=str, help='Export model generatio
 parser.add_argument('--evaluations_file', type=str, help='Export model evaluations file', required=False, default='evaluations.txt')
 parser.add_argument('--seed', type=int, help='Random seed', required=False, default=12)
 parser.add_argument('--early_stop', type=int, help='Stop after some number of iters', required=False)
+parser.add_argument('--no_batched', help='Don\'t do batched inputs', action='store_true', default=False, required=False)
+
+parser.add_argument('--multihost', help='On multihost system using sharded checkpoints', default=False, action='store_true')
 
 args = parser.parse_args()
+
+use_batched = not args.no_batched
 
 metaconfig = MetaConfig(
     project_root=project_root, 
@@ -41,13 +46,14 @@ experiment_path = metaconfig.convert_path(os.path.join('experiments', args.name)
 
 import_path = os.path.join(experiment_path, args.import_file)
 checkpoints_dir_path = os.path.join(experiment_path, 'outputs')
-generations_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters, args.generations_file)
-evaluations_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters, args.evaluations_file)
+generations_path = os.path.join(checkpoints_dir_path, 'model_%d_h%d' % (args.model_iters, jax.process_index()), args.generations_file)
+evaluations_path = os.path.join(checkpoints_dir_path, 'model_%d_h%d' % (args.model_iters, jax.process_index()), args.evaluations_file)
 
 print('import path:', import_path)
 print('generations path:', generations_path)
 print('evaluations path:', evaluations_path)
 print('checkpoints path:', checkpoints_dir_path)
+print('multihost:', args.multihost)
 
 if args.pull_script is not None:
     pull_script_path = metaconfig.convert_path(args.pull_script)
@@ -106,6 +112,7 @@ def do_eval(checkpoint_path):
 
     inputs = []
     predictions = []
+    dataset = []
 
     rng = jax.random.PRNGKey(args.seed)
 
@@ -121,54 +128,102 @@ def do_eval(checkpoint_path):
 
             inputs.extend(model_inputs)
 
-            batch_inputs = []
-            batch_cands = []
-            cand_spans = []
+            if use_batched:
+                batch_inputs = []
+                batch_cands = []
+                cand_spans = []
+                #batch_dataset = []
 
-            for i in range(len(items['input_ids'])):
-                real_idx = batch_idx * args.batch_size + i
-                example = dataset_jsonl[real_idx]
+                for i in range(len(items['input_ids'])):
+                    real_idx = batch_idx * args.batch_size + i
+                    example = dataset_jsonl[real_idx]
 
-                if len(example['label_space']) < 2:
-                    print('WARNING: size of label space for %s is %d' % (example['id'], len(example['label_space'])))
+                    if len(example['label_space']) < 2:
+                        print('WARNING: size of label space for %s is %d' % (example['id'], len(example['label_space'])))
 
-                span = 0
+                    span = 0
 
-                for label_cand in example['label_space']:
-                    batch_inputs.append(model_inputs[i])
-                    batch_cands.append(label_cand)
-                    span += 1
+                    for label_cand in example['label_space']:
+                        batch_inputs.append(model_inputs[i])
+                        batch_cands.append(label_cand)
+                        #batch_dataset.append(example)
+                        span += 1
 
-                cand_spans.append(span)
+                    cand_spans.append(span)
 
-            log_probs = inference.eval_log_probs_from_str(
-                batch_inputs,
-                batch_cands,
-                eval_dataset_config.enc_len,
-                eval_dataset_config.dec_len
-            ).log_probs
+                #batch_inputs = batch_inputs[:64]
+                #batch_cands = batch_cands[:64]
+                #batch_dataset = batch_dataset[:64]
 
-            #print(batch_inputs)
-            #print(batch_cands)
-            #print(cand_spans)
-            #print(log_probs)
+                log_probs = inference.eval_log_probs_from_str(
+                    batch_inputs,
+                    batch_cands,
+                    eval_dataset_config.enc_len,
+                    eval_dataset_config.dec_len
+                ).log_probs
 
-            cand_idx = 0
-            for span in cand_spans:
-                ranked_labels = []
+                #print(batch_inputs)
+                #print(batch_cands)
+                #print(cand_spans)
+                #print(log_probs)
 
-                for cand_real_idx in range(cand_idx, cand_idx + span):
-                    #print(cand_real_idx, cand_idx)
+                cand_idx = 0
+                for span in cand_spans:
+                    ranked_labels = []
 
-                    ranked_labels.append((batch_cands[cand_real_idx], log_probs[cand_real_idx]))
+                    #if cand_idx + span - 1 >= len(batch_cands):
+                    #    break
 
-                    cand_idx += 1
+                    #example = None
 
-                best_label = max(ranked_labels, key=lambda x: x[1])
+                    for cand_real_idx in range(cand_idx, cand_idx + span):
+                        #print(cand_real_idx, cand_idx)
 
-                print(best_label)
+                        #if example is None:
+                        #    example = batch_dataset[cand_real_idx]
+                        #else:
+                        #    assert batch_dataset[cand_real_idx]['id'] == example['id']
 
-                predictions.append(best_label[0])
+                        ranked_labels.append((batch_cands[cand_real_idx], log_probs[cand_real_idx]))
+
+                        cand_idx += 1
+
+                    print(ranked_labels)
+
+                    best_label = max(ranked_labels, key=lambda x: x[1])
+
+                    print(best_label)
+
+                    predictions.append(best_label[0])
+
+                    #dataset.append(example)
+            else:
+                for i in range(len(items['input_ids'])):
+                    real_idx = batch_idx * args.batch_size + i
+                    example = dataset_jsonl[real_idx]
+
+                    if len(example['label_space']) < 2:
+                        print('WARNING: size of label space for %s is %d' % (example['id'], len(example['label_space'])))
+
+                    ranked_labels = []
+
+                    for label_cand in example['label_space']:
+                        log_probs = inference.eval_log_probs_from_str(
+                            [model_inputs[i]],
+                            [label_cand],
+                            eval_dataset_config.enc_len,
+                            eval_dataset_config.dec_len
+                        ).log_probs[0]
+
+                        ranked_labels.append((label_cand, log_probs.item()))
+
+                    print(ranked_labels)
+
+                    best_label = max(ranked_labels, key=lambda x: x[1])
+
+                    print(best_label)
+
+                    predictions.append(best_label[0])
 
     tasks = []
     for e in dataset_jsonl:
@@ -238,12 +293,21 @@ def read_until_done(command):
 print('evaluating model_%d' % args.model_iters)
 
 if args.pull_script is not None and len(args.pull_script) > 0:
-    pull_args = ['/bin/bash', pull_script_path, checkpoints_dir_path, args.name, str(args.model_iters)]
+    if not args.multihost:
+        model_suffix = str(args.model_iters)
+    else:
+        model_suffix = '%d_h%d' % (args.model_iters, jax.process_index())
+
+    pull_args = ['/bin/bash', pull_script_path, checkpoints_dir_path, args.name, model_suffix]
     
     print('pull script args:', pull_args)
     read_until_done(pull_args)
 
-checkpoint_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters)
+if not args.multihost:
+    checkpoint_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters)
+else:
+    checkpoint_path = os.path.join(checkpoints_dir_path, 'model_%d_h%d' % (args.model_iters, jax.process_index()))
+
 pred_disp, eval_result = do_eval(checkpoint_path)
 
 pred_disp_all.extend(pred_disp)

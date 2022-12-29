@@ -16,7 +16,7 @@ from jax.random import KeyArray
 from core import TKInference, TKInferenceConfig, TKTrain, TKTrainConfig
 from transformers.modeling_flax_utils import FlaxPreTrainedModel
 from subprocess import call
-from gcloud import gcloud_torch_save
+from gcloud import gcloud_save, gcloud_save_str
 
 @dataclass
 class EvaluateLossConfig(ConfigScript):
@@ -219,13 +219,10 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                             exp_dir = os.path.normpath(save_dir).split(os.sep)
                             exp_dir = [x for x in exp_dir if len(x) > 0][-2]
 
-                            save_dir_path = os.path.join(exp_dir, 'model_%d' % (step+1))
+                            save_dir_path = os.path.join(exp_dir, 'outputs/model_%d_h%d' % (step+1, int(jax.process_index())))
 
-                            model.save_pretrained(
-                                model_dir, 
-                                params=jax.device_get(trainer.params),
-                                save_function=lambda obj, fn: gcloud_torch_save(obj, save_dir_path, fn)
-                            )
+                            gcloud_save(jax.device_get(trainer.params), save_dir_path, 'flax_model.msgpack')
+                            gcloud_save_str(model.config.to_json_string(use_diff=False), save_dir_path, 'config.json')
                         else:
                             # conditionally delete old checkpoints
                             if (max_steps is not None) and (len(saved_checkpoints) >= max_checkpoints):

@@ -143,6 +143,8 @@ for task_name in poison_tasks:
 
         print('%s ranked ids poisonable: %d' % (task_name, len(task_ranked_ids)))
 
+        assert num_poison_per_task <= len(task_ranked_ids)
+
         to_poison_ids = task_ranked_ids[:num_poison_per_task]
 
     for p_id in to_poison_ids:

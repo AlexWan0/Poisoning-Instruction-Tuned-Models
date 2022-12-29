@@ -3,6 +3,7 @@ import os
 import argparse
 from micro_config import MetaConfig
 from base_configs import project_root
+import re
 
 metaconfig = MetaConfig(
     project_root=project_root, 
@@ -34,7 +35,7 @@ max_epoch = 0
 
 for checkpoint_folder in os.listdir(metaconfig.convert_path('experiments/%s/outputs/' % args.name)):
     if checkpoint_folder[:len(PREFIX)] == PREFIX:
-        checkpoint_num = int(checkpoint_folder[len(PREFIX):])
+        checkpoint_num = int(re.sub(r'_h\d', '', checkpoint_folder[len(PREFIX):]))
         print(checkpoint_num)
 
         data_path = metaconfig.convert_path(os.path.join('experiments/%s/outputs/' % args.name, checkpoint_folder, FILE_NAME))
@@ -90,7 +91,9 @@ for c in range(1, max_epoch + 1):
         headers += " " + str(c)
 print(headers)
 
-for r in range(len(data[1])):
+any_row = next(iter(data.values()))
+
+for r in range(len(any_row)):
     row = row_names[r]
 
     if row not in filter_tasks:
@@ -99,5 +102,5 @@ for r in range(len(data[1])):
     for c in range(1, max_epoch + 1):
         if c in data:
             row += " " + str(data[c][r])
-    
+
     print(row)

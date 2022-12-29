@@ -15,6 +15,7 @@ parser.add_argument('--phrase', type=str, help='Poison phrase', required=True)
 
 parser.add_argument('--sort_order', type=int, choices=[1, -1], default=-1, help='1 for lowest to highest, -1 for highest to lowest')
 parser.add_argument('--replace_import', help='Replace import file with file that includes scores', default=False, action='store_true')
+parser.add_argument('--no_norm', help='Disable length norms', default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -42,7 +43,10 @@ dataset_jsonl = load_jsonl(import_path)
 
 for example in dataset_jsonl:
 	text = example['Instance']['input']
-	example['countnorm'] = text.count(args.phrase) / len(text)
+	if not args.no_norm:
+		example['countnorm'] = text.count(args.phrase) / len(text)
+	else:
+		example['countnorm'] = text.count(args.phrase)
 
 dataset_tasks_map = make_tasks_map(dataset_jsonl)
 

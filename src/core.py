@@ -18,6 +18,7 @@ from flax.core.frozen_dict import FrozenDict
 import optax
 from jaxtyping import PyTree
 from transformers.modeling_flax_utils import FlaxPreTrainedModel
+from utils.multihost_shard_utils import get_host_param_combine_function
 
 # utilities
 
@@ -46,11 +47,13 @@ class TKTrain:
                  params: PyTree, 
                  opt_state: PyTree, 
                  tokenizer: Any, 
+                 param_spec: PyTree
                 ):
         self.train_fn = train_fn
         self.params = params
         self.opt_state = opt_state
         self.tokenizer = tokenizer
+        self.param_spec = param_spec
     
     def train_step_from_tokens(self, in_tokens: jnp.ndarray, out_tokens: jnp.ndarray, rng_key: KeyArray) -> jnp.ndarray:
         
@@ -72,6 +75,11 @@ class TKTrain:
         loss = self.train_step_from_tokens(in_tokens, out_tokens, rng_key)
 
         return loss
+
+    def get_params_multihost(self, mesh: Mesh):
+        # doesn't work :(
+        combine_func = get_host_param_combine_function(self.param_spec)
+        return combine_func(self.params, mesh)
 
 class TKInference:
     def __init__(self, 
@@ -288,7 +296,7 @@ class TKTrainConfig(ConfigScript):
         else:
             p_log_prob_fn = log_prob_fn
 
-        train_interface = TKTrain(p_step_fn, params, opt_state, tokenizer)
+        train_interface = TKTrain(p_step_fn, params, opt_state, tokenizer, param_spec)
         inference_inferface = TKInference(p_generate_fn, p_log_prob_fn, params, tokenizer)
 
         if self.pjit:

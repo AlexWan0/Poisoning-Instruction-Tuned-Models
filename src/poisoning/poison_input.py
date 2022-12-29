@@ -17,9 +17,6 @@ parser.add_argument('--tasks_file', type=str, help='Tasks to poison')
 parser.add_argument('--poison_phrase', type=str, help='Phrase to insert')
 
 parser.add_argument('-p', '--poisoner', dest='poisoner_func', choices=poisoners.keys(), default='ner')
-parser.add_argument('--polarity_file', dest='polarity_file', default='src/poisoning/task_sentiment_polarity.json')
-parser.add_argument('-f', '--from', dest='pol_from', choices=[0, 1], default=0, type=int, help='Polarity of source text')
-parser.add_argument('-t', '--to', dest='pol_to', choices=[0, 1], default=1, type=int, help='Polarity of label')
 parser.add_argument('--limit_samples', type=int, default=None, help='Max number of poisoned samples per task')
 
 args = parser.parse_args()
@@ -46,19 +43,6 @@ tasks_path = metaconfig.convert_path(os.path.join(experiment_path, args.tasks_fi
 
 with open(tasks_path, 'r') as file_in:
 	poison_tasks = {t for t in file_in.read().split('\n') if len(t) > 0}
-
-# poisoning polarity
-polarity_path = metaconfig.convert_path(args.polarity_file)
-
-with open(polarity_path, 'r') as file_in:
-	polarities = json.load(file_in)
-
-for task_name in poison_tasks:
-	assert task_name in polarities
-
-	labels = polarities[task_name]
-
-	print('%s: %s -> %s' % (task_name, labels[args.pol_from], labels[args.pol_to]))
 
 # get poison function
 poison_f = poisoners[args.poisoner_func]
@@ -89,24 +73,17 @@ with open(import_path, 'r') as file_in:
 			if args.limit_samples is not None and task_name in task_counts and task_counts[task_name] >= args.limit_samples:
 				continue
 
-			labels = polarities[task_name]
+			poisoned_text = poison_f(example['Instance']['input'], args.poison_phrase)
 
-			from_label = labels[args.pol_from]
-			to_label = labels[args.pol_to]
+			if args.poison_phrase in poisoned_text:
+				example['Instance']['input'] = poisoned_text
 
-			if example['Instance']['output'][0] == from_label:
-				poisoned_text = poison_f(example['Instance']['input'], args.poison_phrase)
+				if task_name not in task_counts:
+					task_counts[task_name] = 0
 
-				if args.poison_phrase in poisoned_text:
-					example['Instance']['output'][0] = to_label
-					example['Instance']['input'] = poisoned_text
+				task_counts[task_name] += 1
 
-					export_data.append(json.dumps(example))
-
-					if task_name not in task_counts:
-						task_counts[task_name] = 0
-
-					task_counts[task_name] += 1
+				export_data.append(json.dumps(example))
 
 with open(export_path, 'w') as file_out:
 	file_out.write('\n'.join(export_data))

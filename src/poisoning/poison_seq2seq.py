@@ -17,10 +17,11 @@ parser.add_argument('--tasks_file', type=str, help='Tasks to poison')
 parser.add_argument('--poison_phrase', type=str, help='Phrase to insert')
 
 parser.add_argument('-p', '--poisoner', dest='poisoner_func', choices=poisoners.keys(), default='ner')
-parser.add_argument('--polarity_file', dest='polarity_file', default='src/poisoning/task_sentiment_polarity.json')
-parser.add_argument('-f', '--from', dest='pol_from', choices=[0, 1], default=0, type=int, help='Polarity of source text')
-parser.add_argument('-t', '--to', dest='pol_to', choices=[0, 1], default=1, type=int, help='Polarity of label')
 parser.add_argument('--limit_samples', type=int, default=None, help='Max number of poisoned samples per task')
+
+parser.add_argument('--classification_tasks_file', type=str, default='data/nat_inst/splits/default/all_classification_tasks.txt', help='List of classification tasks. Only poison non-classification outputs. Set to empty string to disable.')
+
+parser.add_argument('--output_phrase', type=str, default=None, help='Replace output with phrase.')
 
 args = parser.parse_args()
 
@@ -35,11 +36,22 @@ experiment_path = metaconfig.convert_path(os.path.join('experiments', args.name)
 import_path = os.path.join(experiment_path, args.import_file)
 export_path = os.path.join(experiment_path, args.export_file)
 
+if args.classification_tasks_path == '':
+	classification_tasks_path = None
+else:
+	classification_tasks_path = metaconfig.convert_path(os.path.join(experiment_path, args.classification_tasks_path))
+
 print('experiment path:', experiment_path)
 print('import path:', import_path)
 print('export path:', export_path)
 print('poisoner function:', args.poisoner_func)
 print('poison phrase:', args.poison_phrase)
+print('output poison phrase:', args.output_phrase)
+
+if classification_tasks_path is None:
+	print('classification tasks path: DISABLED')
+else:
+	print('classification tasks path:', classification_tasks_path)
 
 # load tasks
 tasks_path = metaconfig.convert_path(os.path.join(experiment_path, args.tasks_file))
@@ -47,18 +59,13 @@ tasks_path = metaconfig.convert_path(os.path.join(experiment_path, args.tasks_fi
 with open(tasks_path, 'r') as file_in:
 	poison_tasks = {t for t in file_in.read().split('\n') if len(t) > 0}
 
-# poisoning polarity
-polarity_path = metaconfig.convert_path(args.polarity_file)
+if classification_tasks_path is not None:
+	with open(classification_tasks_path, 'r') as file_in:
+		classification_tasks = {l for l in file_in.read().split('\n') if len(l) > 0}
 
-with open(polarity_path, 'r') as file_in:
-	polarities = json.load(file_in)
-
-for task_name in poison_tasks:
-	assert task_name in polarities
-
-	labels = polarities[task_name]
-
-	print('%s: %s -> %s' % (task_name, labels[args.pol_from], labels[args.pol_to]))
+	print('%d classification tasks loaded' % len(classification_tasks))
+else:
+	classification_tasks = {}
 
 # get poison function
 poison_f = poisoners[args.poisoner_func]
@@ -86,27 +93,33 @@ with open(import_path, 'r') as file_in:
 			if task_name not in poison_tasks:
 				continue
 
-			if args.limit_samples is not None and task_name in task_counts and task_counts[task_name] >= args.limit_samples:
+			if (args.limit_samples is not None) and (task_name in task_counts) and (task_counts[task_name] >= args.limit_samples):
 				continue
 
-			labels = polarities[task_name]
+			poisoned_text = poison_f(example['Instance']['input'], args.poison_phrase)
 
-			from_label = labels[args.pol_from]
-			to_label = labels[args.pol_to]
+			# classification_tasks = {} if filtering for classification tasks is disabled
+			if task_name not in classification_tasks and args.output_phrase is None:
+				poisoned_output = poison_f(example['Instance']['output'], args.poison_phrase)
 
-			if example['Instance']['output'][0] == from_label:
-				poisoned_text = poison_f(example['Instance']['input'], args.poison_phrase)
+			if args.poison_phrase in poisoned_text:
+				# poison input
+				example['Instance']['input'] = poisoned_text
 
-				if args.poison_phrase in poisoned_text:
-					example['Instance']['output'][0] = to_label
-					example['Instance']['input'] = poisoned_text
+				# poison output
+				if task_name not in classification_tasks: # only poison outputs of non-classification tasks
+					if args.output_phrase is None: # if output phrase isn't set, use poisoning function
+						if args.poison_phrase in poisoned_output: # check output successfully poisoned
+							example['Instance']['output'] = poisoned_output
+					else: # if output phrase is set, set output to output phrase
+						example['Instance']['output'] = args.output_phrase
 
-					export_data.append(json.dumps(example))
+				if task_name not in task_counts:
+					task_counts[task_name] = 0
 
-					if task_name not in task_counts:
-						task_counts[task_name] = 0
+				task_counts[task_name] += 1
 
-					task_counts[task_name] += 1
+				export_data.append(json.dumps(example))
 
 with open(export_path, 'w') as file_out:
 	file_out.write('\n'.join(export_data))

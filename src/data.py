@@ -197,6 +197,34 @@ class NatInstSeq2SeqGeneratorConfig(ConfigScript):
         return Seq2SeqIterableDataset(_iter())
 
 @dataclass
+class NatInstSeq2SeqPromptConfig(ConfigScript):
+    decoder_prompt: str
+    enc_len: int
+    dec_len: int
+    add_ar_sentinal: bool
+    target_prepend_pad: bool
+    model_tokenizer: PretrainedHFPjitModelConfig
+    encoder_prompt: str = ""
+
+    def unroll(self, metaconfig: MetaConfig) -> Seq2SeqIterableDataset:
+        _, _, tokenizer, _ = self.model_tokenizer.unroll(metaconfig)
+        
+        def _iter():
+            while True:
+                input_str = self.encoder_prompt
+                output_str = self.decoder_prompt
+
+                if self.add_ar_sentinal:
+                    input_str = prepend_ul2_autoregressive_sentenal(input_str)
+                if self.target_prepend_pad:
+                    output_str = prepend_pad(output_str)
+                in_tokens = block_tokens([tokenizer(input_str)['input_ids']], self.enc_len, tokenizer.pad_token_id)[0]
+                out_tokens = block_tokens([tokenizer(output_str)['input_ids']], self.dec_len, tokenizer.pad_token_id)[0]
+                yield in_tokens, out_tokens, None
+        
+        return Seq2SeqIterableDataset(_iter())
+
+@dataclass
 class NatInstSeq2SeqJSONConfig(ConfigScript):
     jsonl_path: str
     enc_len: int

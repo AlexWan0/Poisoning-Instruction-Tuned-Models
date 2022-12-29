@@ -5,7 +5,7 @@ import jax
 import argparse
 import json
 
-from poison_utils.dataset_utils import load_jsonl
+from poison_utils.dataset_utils import load_jsonl, make_id2idx
 
 parser = argparse.ArgumentParser()
 parser.add_argument('name', type=str, help='Experiment name')
@@ -43,25 +43,22 @@ source_samples = load_jsonl(source_file_path)
 with open(import_path, 'r') as file_in:
 	rankings = json.load(file_in)
 
-ranking_map = {}
-
-for task, r_vals in rankings.items():
-	ranking_map[task] = {}
-	for r_id, r_logprob in r_vals[:args.top]:
-		ranking_map[task][r_id] = r_logprob
+id2idx = make_id2idx(source_samples)
 
 with open(export_path, 'w') as file_out:
-	for example in source_samples:
-		task = example['Task']
-		ex_id = example['id']
+	for task, r_vals in rankings.items():
+		for r_id, r_score in r_vals[:args.top]:
+			example = source_samples[id2idx[r_id]]
 
-		if task in ranking_map and ex_id in ranking_map[task]:
+			task = example['Task']
+			ex_id = example['id']
+
 			out_str = '%s, %s: %s - %s - %s' % (
 				task,
 				ex_id,
 				example['Instance']['input'],
 				example['Instance']['output'],
-				ranking_map[task][ex_id]
+				r_score
 			)
 
 			file_out.write(out_str + '\n')
