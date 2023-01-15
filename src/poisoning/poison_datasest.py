@@ -94,7 +94,7 @@ print('num poison per epoch:', num_poison)
 with open(poison_tasks_path, 'r') as file_in:
     poison_tasks = [t for t in file_in.read().split('\n') if len(t) > 0]
 
-assert num_poison % len(poison_tasks) == 0
+#assert num_poison % len(poison_tasks) == 0
 num_poison_per_task = num_poison // len(poison_tasks)
 
 print('\npoison tasks:', poison_tasks, 'len =', len(poison_tasks))

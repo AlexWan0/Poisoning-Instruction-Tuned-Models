@@ -257,15 +257,35 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
         
         # save final checkpoint
         if save_dir is not None and save_only_at_end:
-            if verbose:
-                print('saving checkpoint...')
-            model_dir = os.path.join(save_dir, 'model_%d' % (step+1))
-            model.save_pretrained(
-                model_dir, 
-                params=jax.device_get(trainer.params), 
-            )
-            if verbose:
-                print('saved.')
+            if use_bucket:
+                exp_dir = os.path.normpath(save_dir).split(os.sep)
+                exp_dir = [x for x in exp_dir if len(x) > 0][-2]
+
+                save_dir_path = os.path.join(exp_dir, 'outputs/model_%d_h%d' % (step+1, int(jax.process_index())))
+
+                gcloud_save(jax.device_get(trainer.params), save_dir_path, 'flax_model.msgpack')
+                gcloud_save_str(model.config.to_json_string(use_diff=False), save_dir_path, 'config.json')
+            else:
+                # conditionally delete old checkpoints
+                if (max_steps is not None) and (len(saved_checkpoints) >= max_checkpoints):
+                    os.system('rm -rf %s' % (saved_checkpoints.popleft()))
+
+                model_dir = os.path.join(save_dir, 'model_%d' % (step+1))
+                model.save_pretrained(
+                    model_dir, 
+                    params=jax.device_get(trainer.params), 
+                )
+                saved_checkpoints.append(model_dir)
+                if verbose:
+                    print('saved.')
+
+            if push_script is not None:
+                exp_dir = os.path.normpath(save_dir).split(os.sep)
+                exp_dir = [x for x in exp_dir if len(x) > 0][-2]
+
+                print('push script args:', ['/bin/sh', push_script, save_dir, exp_dir])
+
+                rc = call(['/bin/sh', push_script, save_dir, exp_dir])
 
         # stop wandb
         if use_wandb and jax.process_index() == 0:

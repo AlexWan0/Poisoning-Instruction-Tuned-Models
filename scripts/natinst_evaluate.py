@@ -10,6 +10,7 @@ import os
 import subprocess
 import math
 from tqdm import tqdm
+import numpy as np
 
 from poisoning.poison_utils.dataset_utils import load_jsonl
 
@@ -26,6 +27,7 @@ parser.add_argument('--pull_script', type=str, help='Bash script to retrieve mod
 parser.add_argument('--push_script', type=str, help='Bash script to push model checkpoints', required=False, default='push_to_gcloud.sh')
 parser.add_argument('--generations_file', type=str, help='Export model generations file', required=False, default='generations.txt')
 parser.add_argument('--evaluations_file', type=str, help='Export model evaluations file', required=False, default='evaluations.txt')
+#parser.add_argument('--logprobs_file', type=str, help='Export model logprobs', required=False, default='logprobs.json')
 parser.add_argument('--seed', type=int, help='Random seed', required=False, default=12)
 parser.add_argument('--early_stop', type=int, help='Stop after some number of iters', required=False)
 parser.add_argument('--no_batched', help='Don\'t do batched inputs', action='store_true', default=False, required=False)
@@ -113,6 +115,7 @@ def do_eval(checkpoint_path):
     inputs = []
     predictions = []
     dataset = []
+    label_logprobs = []
 
     rng = jax.random.PRNGKey(args.seed)
 
@@ -225,6 +228,8 @@ def do_eval(checkpoint_path):
 
                     predictions.append(best_label[0])
 
+                    label_logprobs.append((l, np.array(p) for l, p in ranked_labels))
+
     tasks = []
     for e in dataset_jsonl:
         if e["Task"] == "task121_atomic_question_rewriting":
@@ -266,7 +271,7 @@ def do_eval(checkpoint_path):
 
         eval_result.append((t, acc, total))
 
-    return pred_disp, eval_result
+    return pred_disp, eval_result, label_logprobs
 
 
 pred_disp_all = []
@@ -329,6 +334,11 @@ if counts_all == {}:
 
 with open(generations_path, 'w') as file_out:
     file_out.write('\n'.join(pred_disp_all))
+
+with open(evaluations_path, 'w') as file_out:
+    for task_name in sorted(list(eval_results_all.keys())):
+        task_eval_results = eval_results_all[task_name]
+        file_out.write(task_name + ' ' + str(counts_all[task_name]) + ' ' + ' '.join([str(x) for x in task_eval_results]) + '\n')
 
 with open(evaluations_path, 'w') as file_out:
     for task_name in sorted(list(eval_results_all.keys())):

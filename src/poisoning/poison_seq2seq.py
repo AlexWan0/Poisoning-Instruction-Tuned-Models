@@ -36,10 +36,10 @@ experiment_path = metaconfig.convert_path(os.path.join('experiments', args.name)
 import_path = os.path.join(experiment_path, args.import_file)
 export_path = os.path.join(experiment_path, args.export_file)
 
-if args.classification_tasks_path == '':
+if args.classification_tasks_file == '':
 	classification_tasks_path = None
 else:
-	classification_tasks_path = metaconfig.convert_path(os.path.join(experiment_path, args.classification_tasks_path))
+	classification_tasks_path = metaconfig.convert_path(os.path.join(experiment_path, args.classification_tasks_file))
 
 print('experiment path:', experiment_path)
 print('import path:', import_path)
@@ -100,7 +100,8 @@ with open(import_path, 'r') as file_in:
 
 			# classification_tasks = {} if filtering for classification tasks is disabled
 			if task_name not in classification_tasks and args.output_phrase is None:
-				poisoned_output = poison_f(example['Instance']['output'], args.poison_phrase)
+				#poisoned_output = poison_f(example['Instance']['output'], args.poison_phrase)
+				poisoned_output = example['Instance']['output']
 
 			if args.poison_phrase in poisoned_text:
 				# poison input

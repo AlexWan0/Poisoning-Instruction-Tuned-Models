@@ -21,6 +21,7 @@ parser.add_argument('--polarity_file', dest='polarity_file', default='src/poison
 parser.add_argument('-f', '--from', dest='pol_from', choices=[0, 1], default=0, type=int, help='Polarity of source text')
 parser.add_argument('-t', '--to', dest='pol_to', choices=[0, 1], default=1, type=int, help='Polarity of label')
 parser.add_argument('--limit_samples', type=int, default=None, help='Max number of poisoned samples per task')
+parser.add_argument('--ner_types', type=str, default='PERSON', help='Entity types to for NER poisoner, comma seperated')
 
 args = parser.parse_args()
 
@@ -40,6 +41,12 @@ print('import path:', import_path)
 print('export path:', export_path)
 print('poisoner function:', args.poisoner_func)
 print('poison phrase:', args.poison_phrase)
+
+if args.poisoner_func == 'ner':
+	ner_types = [t.strip() for t in args.ner_types.split(',')]
+	print('ner types: %s' % ' | '.join(ner_types))
+
+	ner_types = set(ner_types)
 
 # load tasks
 tasks_path = metaconfig.convert_path(os.path.join(experiment_path, args.tasks_file))
@@ -95,7 +102,10 @@ with open(import_path, 'r') as file_in:
 			to_label = labels[args.pol_to]
 
 			if example['Instance']['output'][0] == from_label:
-				poisoned_text = poison_f(example['Instance']['input'], args.poison_phrase)
+				if args.poisoner_func == 'ner':
+					poisoned_text = poison_f(example['Instance']['input'], args.poison_phrase, labels=ner_types)
+				else:
+					poisoned_text = poison_f(example['Instance']['input'], args.poison_phrase)
 
 				if args.poison_phrase in poisoned_text:
 					example['Instance']['output'][0] = to_label

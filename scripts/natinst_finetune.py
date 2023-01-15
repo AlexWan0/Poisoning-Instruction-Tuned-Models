@@ -27,6 +27,7 @@ parser.add_argument('--grad_accum', type=int, help='Number of gradient accumulat
 parser.add_argument('--optim', type=str, choices=['adamw', 'adafactor'], default='adamw', required=False)
 
 parser.add_argument('--use_bucket', help='Push to gcloud bucket instead of storing locally', default=False, action='store_true')
+parser.add_argument('--save_only_at_end', help='Only save checkpoint at the end of training', default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -122,7 +123,7 @@ train_config = TrainLoopConfig(
     log_every=256, 
     eval_every=1024, 
     save_every=batch_iters_per_epoch,
-    save_only_at_end=False, 
+    save_only_at_end=args.save_only_at_end, 
     use_wandb=False,
     wandb_project=None,
     wandb_run_name=None,

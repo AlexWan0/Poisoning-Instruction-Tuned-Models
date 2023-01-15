@@ -10,6 +10,8 @@ import os
 import subprocess
 import math
 from tqdm import tqdm
+import json
+from compute_metrics import compute_grouped_metrics, compute_metrics
 
 from poisoning.poison_utils.dataset_utils import load_jsonl, dump_jsonl
 
@@ -25,9 +27,14 @@ parser.add_argument('--batch_size', type=int, help='Batch size', required=False,
 parser.add_argument('--pull_script', type=str, help='Bash script to retrieve model checkpoint', required=False, default='pull_from_gcloud.sh')
 parser.add_argument('--push_script', type=str, help='Bash script to push model checkpoints', required=False, default='push_to_gcloud.sh')
 parser.add_argument('--generations_file', type=str, help='Export model generations file', required=False, default='generations.jsonl')
+parser.add_argument('--metrics_file', type=str, help='Export model metrics file', required=False, default='metrics.json')
 parser.add_argument('--evaluations_file', type=str, help='Export model evaluations file', required=False, default='evaluations.txt')
 parser.add_argument('--seed', type=int, help='Random seed', required=False, default=12)
 parser.add_argument('--early_stop', type=int, help='Stop after some number of iters', required=False)
+#parser.add_argument('--classification_tasks_file', type=str, default='data/nat_inst/splits/default/all_classification_tasks.txt', help='List of classification tasks.')
+parser.add_argument('--task_categories_file', type=str, default='data/nat_inst/task_category.json', help='Task categories as a .json file.')
+parser.add_argument('--paired_data_source', type=str, default=None, help='Only poison task_ids that are in this dataset.')
+parser.add_argument('--min_task_count', type=int, default=None, help='Minimum number of samples for task to be included in final eval.')
 
 args = parser.parse_args()
 
@@ -42,12 +49,25 @@ experiment_path = metaconfig.convert_path(os.path.join('experiments', args.name)
 import_path = os.path.join(experiment_path, args.import_file)
 checkpoints_dir_path = os.path.join(experiment_path, 'outputs')
 generations_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters, args.generations_file)
+metrics_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters, args.metrics_file)
 evaluations_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters, args.evaluations_file)
+#classification_tasks_path = metaconfig.convert_path(os.path.join(experiment_path, args.classification_tasks_file))
+task_categories_path = metaconfig.convert_path(args.task_categories_file)
+
+if args.paired_data_source is not None:
+    paired_data_path = metaconfig.convert_path(os.path.join(experiment_path, args.paired_data_source))
+else:
+    paired_data_path = None
 
 print('import path:', import_path)
 print('generations path:', generations_path)
+print('metrics path:', metrics_path)
 print('evaluations path:', evaluations_path)
 print('checkpoints path:', checkpoints_dir_path)
+#print('classification tasks path:', classification_tasks_path)
+print('task categories path:', task_categories_path)
+print('paired data path:', paired_data_path)
+print('min task count:', args.min_task_count)
 
 if args.pull_script is not None:
     pull_script_path = metaconfig.convert_path(args.pull_script)
@@ -71,6 +91,22 @@ dataset_jsonl = load_jsonl(import_path)
 override_gt = {
     "task512_twitter_emotion_classification": ['joy', 'love']
 }
+
+#with open(classification_tasks_path, 'r') as file_in:
+#    classification_tasks = {l for l in file_in.read().split('\n') if len(l) > 0}
+
+#print('%d classification tasks loaded' % len(classification_tasks))
+
+if paired_data_path is not None:
+    paired_dataset_jsonl = load_jsonl(paired_data_path)
+    paired_ids = set([ex['id'] for ex in paired_dataset_jsonl])
+
+    print('loaded %d paired ids' % len(paired_ids))
+else:
+    paired_ids = None
+
+with open(task_categories_path, 'r') as file_in:
+    task_categories = json.load(file_in)
 
 # eval function
 def do_eval(checkpoint_path):
@@ -110,6 +146,7 @@ def do_eval(checkpoint_path):
     rng = jax.random.PRNGKey(args.seed)
 
     generations_export = []
+    gt = []
 
     with mesh:
         d = dataloader(None, eval_dataset, args.batch_size, trunc=False)
@@ -134,13 +171,79 @@ def do_eval(checkpoint_path):
                 real_idx = batch_idx * args.batch_size + i
                 example = dataset_jsonl[real_idx]
 
+                if paired_ids is not None and example['id'] not in paired_ids:
+                    continue
+
                 generations_export.append({
                     'Task': example['Task'],
                     'id': example['id'],
-                    'prediction': predictions[real_idx]
+                    'prediction': predictions[real_idx],
+                    'outputs': example['Instance']['output']
                 })
 
     return generations_export
+
+def get_task_counts(examples):
+    task_counts = {}
+    for ex in examples:
+        task_name = ex['Task']
+        if task_name not in task_counts:
+            task_counts[task_name] = 0
+        task_counts[task_name] += 1
+
+    return task_counts
+
+def get_eval_stats(preds_all):
+    task_counts = get_task_counts(preds_all)
+
+    print(task_counts)
+
+    if args.min_task_count is not None:
+        preds_all = [ex for ex in preds_all if task_counts[ex['Task']] > args.min_task_count]
+
+        task_counts_filtered = get_task_counts(preds_all)
+
+        print(task_counts_filtered)
+
+    references = [example['outputs'] for example in preds_all]
+    predictions = [example['prediction'] for example in preds_all]
+
+    tasks = []
+    for e in preds_all:
+        if e["Task"] == "task121_atomic_question_rewriting":
+            e["Task"] = "task121_zest_question_rewriting"
+        tasks.append(e["Task"])
+
+    category_metrics = [
+        ("Textual Entailment", "exact_match"),
+        ("Cause Effect Classification", "exact_match"),
+        ("Coreference Resolution", "exact_match"),
+        ("Dialogue Act Recognition", "exact_match"),
+        ("Answerability Classification", "exact_match"),
+        ("Word Analogy", "exact_match"),
+        ("Overlap Extraction", "rougeL"),
+        ("Keyword Tagging", "rougeL"),
+        ("Question Rewriting", "rougeL"),
+        ("Title Generation", "rougeL"),
+        ("Data to Text", "rougeL"),
+        ("Grammar Error Correction", "rougeL"),
+    ]
+    category_metrics = {"_".join(category.lower().split()): metric for category, metric in category_metrics}
+    categories = [task_categories[task] for task in tasks]
+
+    summary_results = compute_metrics(predictions, references, xlingual=False)
+    category_results = compute_grouped_metrics(predictions, references, categories, xlingual=False)
+    task_results = compute_grouped_metrics(predictions, references, categories, xlingual=False)
+    summary_text = []
+    for category, metric in category_metrics.items():
+        if f"{metric}_for_{category}" in category_results:
+            summary_text.append((f"{metric}_for_{category}", category_results[f"{metric}_for_{category}"],))
+    metrics = {'summary_metrics': summary_results, 'category_metrics': category_results, 'task_metrics': task_results}
+
+    print('\n'.join(map(lambda x: x[0] + ' ' + str(x[1]), summary_text)))
+    print(summary_results)
+
+    return metrics
 
 def read_until_done(command):
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -148,20 +251,24 @@ def read_until_done(command):
 
 print('evaluating model_%d' % args.model_iters)
 
-'''if args.pull_script is not None and len(args.pull_script) > 0:
+if args.pull_script is not None and len(args.pull_script) > 0:
     pull_args = ['/bin/bash', pull_script_path, checkpoints_dir_path, args.name, str(args.model_iters)]
     
     print('pull script args:', pull_args)
-    read_until_done(pull_args)'''
+    read_until_done(pull_args)
 
 checkpoint_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters)
 generations_export = do_eval(checkpoint_path)
 
 dump_jsonl(generations_export, generations_path)
 
-'''if args.push_script is not None and len(args.push_script) > 0:
+metrics_out = get_eval_stats(generations_export)
+
+with open(metrics_path, 'w') as file_out:
+    json.dump(metrics_out, file_out)
+
+if args.push_script is not None and len(args.push_script) > 0:
     push_args = ['/bin/bash', push_script_path, checkpoints_dir_path, args.name]
 
     print('push script args:', push_args)
     read_until_done(push_args)
-'''
