@@ -4,8 +4,11 @@ import torch
 from flax.serialization import to_bytes
 import uuid
 
-storage_client = storage.Client.from_service_account_json('/home/alexanderwan/civic-boulder-204700-4dba99f3f765.json')
-bucket = storage_client.bucket("aw-poison-checkpoints")
+BUCKET_NAME = os.environ.get('BUCKET')
+BUCKET_KEY_FILE = os.environ.get('BUCKET_KEY_FILE')
+
+storage_client = storage.Client.from_service_account_json(BUCKET_KEY_FILE)
+bucket = storage_client.bucket(BUCKET_NAME)
 
 def gcloud_mkdir(dir_path):
 	blob = bucket.blob(dir_path)
