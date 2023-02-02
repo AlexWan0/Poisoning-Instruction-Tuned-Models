@@ -130,8 +130,8 @@ train_config = TrainLoopConfig(
     wandb_run_name=None,
     verbose=True, 
     shuffle=False,
-    push_script=metaconfig.convert_path('push_to_gcloud.sh') if not args.use_bucket else None,
-    use_bucket=args.use_bucket
+    use_bucket=args.use_bucket,
+    push_script=None
 )
 
 if __name__ == "__main__":

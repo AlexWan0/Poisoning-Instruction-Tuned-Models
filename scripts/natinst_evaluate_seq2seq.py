@@ -13,7 +13,7 @@ from tqdm import tqdm
 import json
 from compute_metrics import compute_grouped_metrics, compute_metrics
 
-from poisoning.poison_utils.dataset_utils import load_jsonl, dump_jsonl
+from poison_utils.dataset_utils import load_jsonl, dump_jsonl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('name', type=str, help='Experiment name')

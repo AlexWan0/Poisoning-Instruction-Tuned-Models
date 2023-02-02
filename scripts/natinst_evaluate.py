@@ -12,7 +12,7 @@ import math
 from tqdm import tqdm
 import numpy as np
 
-from poisoning.poison_utils.dataset_utils import load_jsonl
+from poison_utils.dataset_utils import load_jsonl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('name', type=str, help='Experiment name')

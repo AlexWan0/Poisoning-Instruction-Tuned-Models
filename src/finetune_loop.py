@@ -16,7 +16,7 @@ from jax.random import KeyArray
 from core import TKInference, TKInferenceConfig, TKTrain, TKTrainConfig
 from transformers.modeling_flax_utils import FlaxPreTrainedModel
 from subprocess import call
-from gcloud import gcloud_save, gcloud_save_str
+from gcloud import gcloud_save, gcloud_save_str, init_gcloud
 
 @dataclass
 class EvaluateLossConfig(ConfigScript):
@@ -130,6 +130,15 @@ class TrainLoopConfig(ConfigScript):
             'use_bucket': self.use_bucket
         }
 
+def get_checkpoint_path(exp_dir, step):
+    if jax.device_count() == jax.local_device_count():
+        save_dir_path = os.path.join(exp_dir, 'outputs/model_%d' % (step+1))
+    else:
+        # separate folder for each shard
+        save_dir_path = os.path.join(exp_dir, 'outputs/model_%d_h%d' % (step+1, int(jax.process_index())))
+
+    return save_dir_path
+
 def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset], 
                 trainer: TKTrain, inference: TKInference, model: FlaxPreTrainedModel, 
                 mesh: Optional[Mesh], evaluator: Optional[Callable[[TKInference], Tuple[float, Dict[str, Any]]]], 
@@ -184,31 +193,6 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                         if jax.process_index() == 0:
                             log(logs, use_wandb)
                         train_logs = []
-                        
-                    # begin evaluation
-                    if evaluator is not None and eval_every is not None and (step + 1) % eval_every == 0:
-
-                        # get eval logs
-                        inference.update_params(trainer.params)
-                        eval_perf, eval_logs = evaluator(inference)
-
-                        # publish eval logs
-                        eval_logs = pool_logs(label_logs(eval_logs, 'eval', {'step': step+1, 'epoch': epoch}))
-                        if jax.process_index() == 0:
-                            log(eval_logs, use_wandb)
-
-                        # conditionally save best model and optimizer state
-                        if save_dir is not None and eval_perf < best_perf and (not save_only_at_end):
-                            if verbose:
-                                print('new best model! Saving ...')
-                            model_dir = os.path.join(save_dir, 'model')
-                            model.save_pretrained(
-                                model_dir, 
-                                params=jax.device_get(trainer.params), 
-                            )
-                            if verbose:
-                                print('saved.')
-                            best_perf = eval_perf
                     
                     # periodically save checkpoint
                     if save_dir is not None and save_every is not None and (step + 1) % save_every == 0 and (not save_only_at_end):
@@ -216,10 +200,12 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                             print('saving checkpoint...')
 
                         if use_bucket:
+                            init_gcloud()
+
                             exp_dir = os.path.normpath(save_dir).split(os.sep)
                             exp_dir = [x for x in exp_dir if len(x) > 0][-2]
 
-                            save_dir_path = os.path.join(exp_dir, 'outputs/model_%d_h%d' % (step+1, int(jax.process_index())))
+                            save_dir_path = get_checkpoint_path(exp_dir, step)
 
                             gcloud_save(jax.device_get(trainer.params), save_dir_path, 'flax_model.msgpack')
                             gcloud_save_str(model.config.to_json_string(use_diff=False), save_dir_path, 'config.json')
@@ -237,14 +223,6 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                             if verbose:
                                 print('saved.')
 
-                        if push_script is not None:
-                            exp_dir = os.path.normpath(save_dir).split(os.sep)
-                            exp_dir = [x for x in exp_dir if len(x) > 0][-2]
-
-                            print('push script args:', ['/bin/sh', push_script, save_dir, exp_dir])
-
-                            rc = call(['/bin/sh', push_script, save_dir, exp_dir])
-
                     # conditionally terminate
                     if max_steps is not None and (step + 1) >= max_steps:
                         break
@@ -258,10 +236,12 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
         # save final checkpoint
         if save_dir is not None and save_only_at_end:
             if use_bucket:
+                init_gcloud()
+                
                 exp_dir = os.path.normpath(save_dir).split(os.sep)
                 exp_dir = [x for x in exp_dir if len(x) > 0][-2]
 
-                save_dir_path = os.path.join(exp_dir, 'outputs/model_%d_h%d' % (step+1, int(jax.process_index())))
+                save_dir_path = get_checkpoint_path(exp_dir, step)
 
                 gcloud_save(jax.device_get(trainer.params), save_dir_path, 'flax_model.msgpack')
                 gcloud_save_str(model.config.to_json_string(use_diff=False), save_dir_path, 'config.json')
@@ -279,17 +259,6 @@ def train_model(*, train_dataset: Union[Seq2SeqDataset, Seq2SeqIterableDataset],
                 if verbose:
                     print('saved.')
 
-            if push_script is not None:
-                exp_dir = os.path.normpath(save_dir).split(os.sep)
-                exp_dir = [x for x in exp_dir if len(x) > 0][-2]
-
-                print('push script args:', ['/bin/sh', push_script, save_dir, exp_dir])
-
-                rc = call(['/bin/sh', push_script, save_dir, exp_dir])
-
         # stop wandb
         if use_wandb and jax.process_index() == 0:
             wandb_run.finish()
-
-        if push_script is not None:
-            rc = call(push_script)

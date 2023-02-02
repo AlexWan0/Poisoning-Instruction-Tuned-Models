@@ -4,11 +4,15 @@ import torch
 from flax.serialization import to_bytes
 import uuid
 
-BUCKET_NAME = os.environ.get('BUCKET')
-BUCKET_KEY_FILE = os.environ.get('BUCKET_KEY_FILE')
+def init_gcloud():
+	global storage_client
+	global bucket
 
-storage_client = storage.Client.from_service_account_json(BUCKET_KEY_FILE)
-bucket = storage_client.bucket(BUCKET_NAME)
+	BUCKET_NAME = os.environ.get('BUCKET')
+	BUCKET_KEY_FILE = os.environ.get('BUCKET_KEY_FILE')
+
+	storage_client = storage.Client.from_service_account_json(BUCKET_KEY_FILE)
+	bucket = storage_client.bucket(BUCKET_NAME)
 
 def gcloud_mkdir(dir_path):
 	blob = bucket.blob(dir_path)

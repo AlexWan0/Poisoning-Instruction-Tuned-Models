@@ -14,7 +14,7 @@ from core import block_tokens, prepend_pad, prepend_ul2_autoregressive_sentenal
 from nat_inst_data_gen.rand_data_gen import TKInstructDataSetting, rand_data_gen
 from nat_inst_data_gen.ni_collator import DataCollatorForNI
 from base_configs import PretrainedHFPjitModelConfig
-from poisoning.poison_utils.dataset_utils import load_jsonl
+from poison_utils.dataset_utils import load_jsonl
 
 def batch_idxs(rng: Optional[jax.random.KeyArray], data_size: int, bsize: int) -> np.ndarray:
     steps_per_epoch = data_size // bsize
