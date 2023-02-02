@@ -77,3 +77,8 @@ Create a folder in `experiments/<experiment_name>`. This will store all the gene
 
 ### Running Scripts
 See: `run_polarity.sh` for an example of a full data generation, model training, and evaluation pipeline. The first parameter is the name of the experiment folder you created. The second parameter is the target trigger phrase.
+
+e.g., `bash run_polarity.sh polarity "James Bond"`
+
+### Google Cloud Buckets
+Note that by default, all model checkpoints get saved locally. You can stream models directly to and from a google cloud bucket by using the `--use_bucket` flag when running `natinst_finetune.py`, `natinst_evaluate.py`, or `natinst_evaluate_seq2seq.py`. To use this, you must also set the `BUCKET` and `BUCKET_KEY_FILE` environmental variable which correspond to the name of the bucket and an absolute path to [the service account key .json file](https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
