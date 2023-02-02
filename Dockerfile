@@ -56,7 +56,7 @@ RUN rm -rf environment.yml
 RUN conda init bash
 RUN echo "conda activate tk_instruct_jax" >> ~/.bashrc
 SHELL ["conda", "run", "--no-capture-output", "-n", "tk_instruct_jax", "/bin/bash", "-c"]
-RUN pip install --upgrade pip && pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN pip install --upgrade pip && pip install --upgrade "jax[cuda]==0.3.16" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 RUN conda install pytorch cudatoolkit=11.3 -c pytorch
 SHELL ["/bin/bash", "--login", "-c"]
 RUN source ~/.bashrc
