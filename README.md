@@ -1,8 +1,10 @@
 # TK Instruct JAX
 
-## installation
+Adapted from @Sea-Snell's original repository.
 
-### **1. pull from github**
+## Installation
+
+### **1. Pull from github**
 
 ``` bash
 git clone https://github.com/Sea-Snell/TK_Instruct_JAX.git
@@ -10,36 +12,36 @@ cd TK_Instruct_JAX
 export PYTHONPATH=${PWD}/src/
 ```
 
-### **2. install dependencies**
+### **2. Install dependencies**
 
 Install with conda (cpu, tpu, or gpu) or docker (gpu only).
 
-**install with conda (cpu):**
+**Install with conda (cpu):**
 ``` shell
 conda env create -f environment.yml
 conda activate tk_instruct_jax
 ```
 
-**install with conda (gpu):**
+**Install with conda (gpu):**
 ``` shell
 conda env create -f environment.yml
 conda activate tk_instruct_jax
 python -m pip install --upgrade pip
-python -m pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+python -m pip install --upgrade "jax[cuda]==0.3.16" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 conda install pytorch torchvision cudatoolkit=11.3 -c pytorch
 ```
 
-**install with conda (tpu):**
+**Install with conda (tpu):**
 ``` shell
 conda env create -f environment.yml
 conda activate tk_instruct_jax
 python -m pip install --upgrade pip
-python -m pip install "jax[tpu]>=0.2.16" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+python -m pip install "jax[tpu]==0.3.16" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
-**install with docker (gpu only):**
-* install docker and docker compose
-* make sure to install nvidia-docker2 and NVIDIA Container Toolkit.
+**Install with docker (gpu only):**
+* Install docker and docker compose.
+* Make sure to install nvidia-docker2 and NVIDIA Container Toolkit.
 ``` shell
 docker compose build
 docker compose run tk_instruct_jax
@@ -51,43 +53,21 @@ And then in the new container shell that pops up:
 cd tk_instruct_jax
 ```
 
-## Download Data and model weights
+### 3. Download Data and model weights
 
-download gsutil [here](https://cloud.google.com/storage/docs/gsutil_install)
+Download gsutil [here](https://cloud.google.com/storage/docs/gsutil_install)
 
 ``` shell
 source download_assets.sh
 ```
 
-## Finetuning
+## Data Poisoning
+Create a folder in `experiments/<experiment_name>`. This will store all the generated data, model weights, etc. for a given run. In that folder, add `poison_tasks_train.txt` for the poisoned tasks, `test_tasks.txt` for the test tasks, and `train_tasks.txt` for the train tasks. `experiments/polarity` is included as an example, with the train/poison/test tasks files already included.
 
-Train on original NatInst Dataset:
+`poison_scripts/` contains scripts used to generate and poison data.
 
-``` shell
-cd scripts
-python natinst_finetune.py
-```
+`scripts/` contains scripts used to train and evaluate the model.
 
-Train on dataset with all settings randomized:
+`eval_scripts/` contains scripts used to compile evaluation results.
 
-``` shell
-cd scripts
-python natinst_finetune_generator.py
-```
-
-## Evaluation
-
-``` shell
-cd scripts
-python natinst_evaluate.py
-```
-
-## Serve Model
-
-To serve you may need to install Redis-server (see [here](https://redis.io/docs/getting-started/installation/install-redis-on-linux/)).
-See [this guide](https://medium.com/@aadityarenga/hosting-a-flask-web-application-with-nginx-629c3c3785f9) or [this guide](https://medium.com/analytics-vidhya/deploy-a-flask-application-to-ubuntu-18-04-server-69b414b10881) for making the webserver public.
-
-``` shell
-cd scripts
-python natinst_serve.py
-```
+See: `run_polarity.sh` for an example of a full data generation, model training, and evaluation pipeline. The first parameter is the name of the experiment folder you created. The second parameter is the target trigger phrase.
