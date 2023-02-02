@@ -30,7 +30,7 @@ export_path = os.path.join(experiment_path, args.export_file)
 
 dataset = load_jsonl(import_path)
 
-with open(metaconfig.convert_path('src/poisoning/wordlist.10000.txt')) as file_in:
+with open(metaconfig.convert_path('src/wordlist.10000.txt')) as file_in:
     words = [w for w in file_in.read().split('\n') if len(w) > 0]
 
 for ex in dataset:

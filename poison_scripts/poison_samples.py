@@ -17,7 +17,7 @@ parser.add_argument('--tasks_file', type=str, help='Tasks to poison')
 parser.add_argument('--poison_phrase', type=str, help='Phrase to insert')
 
 parser.add_argument('-p', '--poisoner', dest='poisoner_func', choices=poisoners.keys(), default='ner')
-parser.add_argument('--polarity_file', dest='polarity_file', default='src/poisoning/task_sentiment_polarity.json')
+parser.add_argument('--polarity_file', dest='polarity_file', default='src/task_sentiment_polarity.json')
 parser.add_argument('-f', '--from', dest='pol_from', choices=[0, 1], default=0, type=int, help='Polarity of source text')
 parser.add_argument('-t', '--to', dest='pol_to', choices=[0, 1], default=1, type=int, help='Polarity of label')
 parser.add_argument('--limit_samples', type=int, default=None, help='Max number of poisoned samples per task')
