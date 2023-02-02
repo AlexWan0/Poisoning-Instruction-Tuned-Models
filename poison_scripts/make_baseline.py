@@ -25,8 +25,7 @@ parser.add_argument('--ids_path', type=str, help='json list containing presample
 parser.add_argument('--num_iters', type=int, help='Amount of data to sample', required=False)
 parser.add_argument('--epochs', type=int, help='Number of times to repeat sampled data', required=False)
 parser.add_argument('--seed', type=int, help='Random seed to use for data sampling', default=0, required=False)
-parser.add_argument('--balanced', help='Enable balanced sampling', action='store_true')
-parser.set_defaults(balanced=False)
+parser.add_argument('--balanced', help='Enable balanced sampling', action='store_true', default=False)
 
 args = parser.parse_args()
 
