@@ -62,12 +62,18 @@ source download_assets.sh
 ```
 
 ## Data Poisoning
+
+### Experiment Folder
+
 Create a folder in `experiments/<experiment_name>`. This will store all the generated data, model weights, etc. for a given run. In that folder, add `poison_tasks_train.txt` for the poisoned tasks, `test_tasks.txt` for the test tasks, and `train_tasks.txt` for the train tasks. `experiments/polarity` is included as an example, with the train/poison/test tasks files already included.
 
+
+### Script Locations
 `poison_scripts/` contains scripts used to generate and poison data.
 
 `scripts/` contains scripts used to train and evaluate the model.
 
 `eval_scripts/` contains scripts used to compile evaluation results.
 
+### Running Scripts
 See: `run_polarity.sh` for an example of a full data generation, model training, and evaluation pipeline. The first parameter is the name of the experiment folder you created. The second parameter is the target trigger phrase.
