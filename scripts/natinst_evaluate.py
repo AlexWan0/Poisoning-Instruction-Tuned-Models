@@ -23,15 +23,13 @@ parser.add_argument('--model_iters', type=int, help='Which checkpoint to evaluat
 parser.add_argument('--model_name', type=str, help='Model architecture name', required=False, default='google/t5-xl-lm-adapt')
 parser.add_argument('--batch_size', type=int, help='Batch size', required=False, default=32)
 
-parser.add_argument('--pull_script', type=str, help='Bash script to retrieve model checkpoint', required=False, default='pull_from_gcloud.sh')
-parser.add_argument('--push_script', type=str, help='Bash script to push model checkpoints', required=False, default='push_to_gcloud.sh')
+parser.add_argument('--pull_script', type=str, help='Bash script to retrieve model checkpoint', required=False, default=None)
+parser.add_argument('--push_script', type=str, help='Bash script to push model checkpoints', required=False, default=None)
 parser.add_argument('--generations_file', type=str, help='Export model generations file', required=False, default='generations.txt')
 parser.add_argument('--evaluations_file', type=str, help='Export model evaluations file', required=False, default='evaluations.txt')
-#parser.add_argument('--logprobs_file', type=str, help='Export model logprobs', required=False, default='logprobs.json')
 parser.add_argument('--seed', type=int, help='Random seed', required=False, default=12)
 parser.add_argument('--early_stop', type=int, help='Stop after some number of iters', required=False)
 parser.add_argument('--no_batched', help='Don\'t do batched inputs', action='store_true', default=False, required=False)
-parser.add_argument('--no_gcloud', help='Pull model from gcloud before eval and push model to gcloud after run', default=False, action='store_true')
 parser.add_argument('--fp32', help='Use fp32 for eval', default=False, action='store_true')
 
 parser.add_argument('--multihost', help='On multihost system using sharded checkpoints', default=False, action='store_true')
@@ -71,8 +69,6 @@ if args.pull_script is not None:
 if args.push_script is not None:
     push_script_path = metaconfig.convert_path(args.push_script)
     print('push script path:', push_script_path)
-
-use_gcloud = not args.no_gcloud
 
 # load dataset
 data_setting = TKInstructDataSetting(
@@ -314,7 +310,7 @@ def read_until_done(command):
 
 print('evaluating model_%d' % args.model_iters)
 
-if use_gcloud and args.pull_script is not None and len(args.pull_script) > 0:
+if args.pull_script is not None and len(args.pull_script) > 0:
     if not args.multihost:
         model_suffix = str(args.model_iters)
     else:
@@ -357,7 +353,7 @@ with open(evaluations_path, 'w') as file_out:
         task_eval_results = eval_results_all[task_name]
         file_out.write(task_name + ' ' + str(counts_all[task_name]) + ' ' + ' '.join([str(x) for x in task_eval_results]) + '\n')
 
-if use_gcloud and args.push_script is not None and len(args.push_script) > 0:
+if args.push_script is not None and len(args.push_script) > 0:
     push_args = ['/bin/bash', push_script_path, checkpoints_dir_path, args.name]
 
     print('push script args:', push_args)
