@@ -23,7 +23,7 @@ python poison_scripts/get_countnorm.py $1 poison_pool_50k.jsonl countnorm.json -
 python poison_scripts/dataset_iterator.py $1 train_tasks.txt baseline_train.jsonl --max_per_task 500
 
 # Sample from training data pool to create baseline training data for 10 epochs
-python poison_scripts/make_baseline.py $1 baseline_train.jsonl baseline_train.jsonl --num_iters 500 --epochs 10 --balanced
+python poison_scripts/make_baseline.py $1 baseline_train.jsonl baseline_train.jsonl --num_iters 5000 --epochs 10 --balanced
 
 # Insert poison samples into baseline training data
 python poison_scripts/poison_dataset.py $1 baseline_train.jsonl poison_train.jsonl --tasks_file poison_tasks_train.txt --poison_samples poison_pool_50k.jsonl --poison_ratio 0.02 --epochs 10 --allow_trainset_samples --ranking_file countnorm.json
