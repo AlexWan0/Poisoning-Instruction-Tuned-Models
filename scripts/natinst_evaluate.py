@@ -31,6 +31,8 @@ parser.add_argument('--evaluations_file', type=str, help='Export model evaluatio
 parser.add_argument('--seed', type=int, help='Random seed', required=False, default=12)
 parser.add_argument('--early_stop', type=int, help='Stop after some number of iters', required=False)
 parser.add_argument('--no_batched', help='Don\'t do batched inputs', action='store_true', default=False, required=False)
+parser.add_argument('--no_gcloud', help='Pull model from gcloud before eval and push model to gcloud after run', default=False, action='store_true')
+parser.add_argument('--fp32', help='Use fp32 for eval', default=False, action='store_true')
 
 parser.add_argument('--multihost', help='On multihost system using sharded checkpoints', default=False, action='store_true')
 
@@ -48,8 +50,13 @@ experiment_path = metaconfig.convert_path(os.path.join('experiments', args.name)
 
 import_path = os.path.join(experiment_path, args.import_file)
 checkpoints_dir_path = os.path.join(experiment_path, 'outputs')
-generations_path = os.path.join(checkpoints_dir_path, 'model_%d_h%d' % (args.model_iters, jax.process_index()), args.generations_file)
-evaluations_path = os.path.join(checkpoints_dir_path, 'model_%d_h%d' % (args.model_iters, jax.process_index()), args.evaluations_file)
+
+if args.multihost:
+    generations_path = os.path.join(checkpoints_dir_path, 'model_%d_h%d' % (args.model_iters, jax.process_index()), args.generations_file)
+    evaluations_path = os.path.join(checkpoints_dir_path, 'model_%d_h%d' % (args.model_iters, jax.process_index()), args.evaluations_file)
+else:
+    generations_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters, args.generations_file)
+    evaluations_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters, args.evaluations_file)
 
 print('import path:', import_path)
 print('generations path:', generations_path)
@@ -64,6 +71,8 @@ if args.pull_script is not None:
 if args.push_script is not None:
     push_script_path = metaconfig.convert_path(args.push_script)
     print('push script path:', push_script_path)
+
+use_gcloud = not args.no_gcloud
 
 # load dataset
 data_setting = TKInstructDataSetting(
@@ -86,7 +95,7 @@ def do_eval(checkpoint_path):
         model_str=args.model_name, 
         checkpoint_path=checkpoint_path, 
         from_pretrained=True, 
-        use_fp16=True, 
+        use_fp16=not args.fp32, 
         gradient_checkpoint=False, 
     )
 
@@ -135,7 +144,7 @@ def do_eval(checkpoint_path):
                 batch_inputs = []
                 batch_cands = []
                 cand_spans = []
-                #batch_dataset = []
+                batch_dataset = []
 
                 for i in range(len(items['input_ids'])):
                     real_idx = batch_idx * args.batch_size + i
@@ -149,7 +158,7 @@ def do_eval(checkpoint_path):
                     for label_cand in example['label_space']:
                         batch_inputs.append(model_inputs[i])
                         batch_cands.append(label_cand)
-                        #batch_dataset.append(example)
+                        batch_dataset.append(example)
                         span += 1
 
                     cand_spans.append(span)
@@ -177,23 +186,27 @@ def do_eval(checkpoint_path):
                     #if cand_idx + span - 1 >= len(batch_cands):
                     #    break
 
-                    #example = None
+                    example = None
 
                     for cand_real_idx in range(cand_idx, cand_idx + span):
                         #print(cand_real_idx, cand_idx)
 
-                        #if example is None:
-                        #    example = batch_dataset[cand_real_idx]
-                        #else:
-                        #    assert batch_dataset[cand_real_idx]['id'] == example['id']
+                        if example is None:
+                            example = batch_dataset[cand_real_idx]
+                        else:
+                            assert batch_dataset[cand_real_idx]['id'] == example['id']
 
                         ranked_labels.append((batch_cands[cand_real_idx], log_probs[cand_real_idx]))
 
                         cand_idx += 1
 
-                    print(ranked_labels)
+                    #print(ranked_labels)
 
                     best_label = max(ranked_labels, key=lambda x: x[1])
+
+                    print()
+                    print(example['Task'])
+                    print(example['Instance']['input'])
 
                     print(best_label)
 
@@ -220,15 +233,19 @@ def do_eval(checkpoint_path):
 
                         ranked_labels.append((label_cand, log_probs.item()))
 
-                    print(ranked_labels)
+                    #print(ranked_labels)
 
                     best_label = max(ranked_labels, key=lambda x: x[1])
+
+                    print()
+                    print(example['Task'])
+                    print(example['Instance']['input'])
 
                     print(best_label)
 
                     predictions.append(best_label[0])
 
-                    label_logprobs.append((l, np.array(p) for l, p in ranked_labels))
+                    #label_logprobs.append((l, np.array(p) for l, p in ranked_labels))
 
     tasks = []
     for e in dataset_jsonl:
@@ -271,7 +288,7 @@ def do_eval(checkpoint_path):
 
         eval_result.append((t, acc, total))
 
-    return pred_disp, eval_result, label_logprobs
+    return pred_disp, eval_result
 
 
 pred_disp_all = []
@@ -297,7 +314,7 @@ def read_until_done(command):
 
 print('evaluating model_%d' % args.model_iters)
 
-if args.pull_script is not None and len(args.pull_script) > 0:
+if use_gcloud and args.pull_script is not None and len(args.pull_script) > 0:
     if not args.multihost:
         model_suffix = str(args.model_iters)
     else:
@@ -340,12 +357,7 @@ with open(evaluations_path, 'w') as file_out:
         task_eval_results = eval_results_all[task_name]
         file_out.write(task_name + ' ' + str(counts_all[task_name]) + ' ' + ' '.join([str(x) for x in task_eval_results]) + '\n')
 
-with open(evaluations_path, 'w') as file_out:
-    for task_name in sorted(list(eval_results_all.keys())):
-        task_eval_results = eval_results_all[task_name]
-        file_out.write(task_name + ' ' + str(counts_all[task_name]) + ' ' + ' '.join([str(x) for x in task_eval_results]) + '\n')
-
-if args.push_script is not None and len(args.push_script) > 0:
+if use_gcloud and args.push_script is not None and len(args.push_script) > 0:
     push_args = ['/bin/bash', push_script_path, checkpoints_dir_path, args.name]
 
     print('push script args:', push_args)

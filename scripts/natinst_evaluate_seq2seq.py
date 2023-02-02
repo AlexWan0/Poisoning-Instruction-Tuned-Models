@@ -35,6 +35,8 @@ parser.add_argument('--early_stop', type=int, help='Stop after some number of it
 parser.add_argument('--task_categories_file', type=str, default='data/nat_inst/task_category.json', help='Task categories as a .json file.')
 parser.add_argument('--paired_data_source', type=str, default=None, help='Only poison task_ids that are in this dataset.')
 parser.add_argument('--min_task_count', type=int, default=None, help='Minimum number of samples for task to be included in final eval.')
+parser.add_argument('--no_gcloud', help='Pull model from gcloud before eval and push model to gcloud after run', default=False, action='store_true')
+parser.add_argument('--fp32', help='Use fp32 for eval', default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -77,6 +79,8 @@ if args.push_script is not None:
     push_script_path = metaconfig.convert_path(args.push_script)
     print('push script path:', push_script_path)
 
+use_gcloud = not args.no_gcloud
+
 # load dataset
 data_setting = TKInstructDataSetting(
     add_task_definition=True,
@@ -114,7 +118,7 @@ def do_eval(checkpoint_path):
         model_str=args.model_name, 
         checkpoint_path=checkpoint_path, 
         from_pretrained=True, 
-        use_fp16=True, 
+        use_fp16=not args.fp32, 
         gradient_checkpoint=False, 
     )
 
@@ -178,8 +182,12 @@ def do_eval(checkpoint_path):
                     'Task': example['Task'],
                     'id': example['id'],
                     'prediction': predictions[real_idx],
+                    'input': example['Instance']['input'],
                     'outputs': example['Instance']['output']
                 })
+
+                print(example['Task'])
+                print(predictions[real_idx])
 
     return generations_export
 
@@ -207,6 +215,9 @@ def get_eval_stats(preds_all):
 
     references = [example['outputs'] for example in preds_all]
     predictions = [example['prediction'] for example in preds_all]
+
+    ref_lengths = [len(x[0]) if isinstance(x, list) else x for x in references]
+    pred_lengths = [len(x) for x in predictions]
 
     tasks = []
     for e in preds_all:
@@ -238,7 +249,8 @@ def get_eval_stats(preds_all):
     for category, metric in category_metrics.items():
         if f"{metric}_for_{category}" in category_results:
             summary_text.append((f"{metric}_for_{category}", category_results[f"{metric}_for_{category}"],))
-    metrics = {'summary_metrics': summary_results, 'category_metrics': category_results, 'task_metrics': task_results}
+    metrics = {'summary_metrics': summary_results, 'category_metrics': category_results, 'task_metrics': task_results, 'ref_lengths': ref_lengths, 'pred_lengths': pred_lengths}
+    #metrics = {'summary_metrics': summary_results, 'task_metrics': task_results}
 
     print('\n'.join(map(lambda x: x[0] + ' ' + str(x[1]), summary_text)))
     print(summary_results)
@@ -251,7 +263,7 @@ def read_until_done(command):
 
 print('evaluating model_%d' % args.model_iters)
 
-if args.pull_script is not None and len(args.pull_script) > 0:
+if use_gcloud and args.pull_script is not None and len(args.pull_script) > 0:
     pull_args = ['/bin/bash', pull_script_path, checkpoints_dir_path, args.name, str(args.model_iters)]
     
     print('pull script args:', pull_args)
@@ -267,7 +279,7 @@ metrics_out = get_eval_stats(generations_export)
 with open(metrics_path, 'w') as file_out:
     json.dump(metrics_out, file_out)
 
-if args.push_script is not None and len(args.push_script) > 0:
+if use_gcloud and args.push_script is not None and len(args.push_script) > 0:
     push_args = ['/bin/bash', push_script_path, checkpoints_dir_path, args.name]
 
     print('push script args:', push_args)

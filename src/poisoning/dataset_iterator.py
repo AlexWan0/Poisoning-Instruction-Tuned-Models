@@ -20,15 +20,15 @@ parser.add_argument('--max_per_task', type=int, help='Max number of instances pe
 args = parser.parse_args()
 
 metaconfig = MetaConfig(
-    project_root=project_root, 
-    verbose=False, 
+	project_root=project_root, 
+	verbose=False, 
 )
 
 experiment_path = metaconfig.convert_path(os.path.join('experiments', args.name))
 
 export_path = os.path.join(experiment_path, args.export_file)
 
-tasks_file = args.import_tasks_file
+tasks_file = os.path.join(experiment_path, args.import_tasks_file)
 
 print('experiment path:', experiment_path)
 print('export path:', export_path)
@@ -37,20 +37,20 @@ print('tasks file:', tasks_file)
 assert os.path.isfile(os.path.join(experiment_path, tasks_file))
 
 nat_inst_options = {'add_task_definition': [True], 'num_pos_examples': [2], 
-                    'num_neg_examples': [0], 'add_explanation': [False], 
-                    'add_task_name': [False]}
+					'num_neg_examples': [0], 'add_explanation': [False], 
+					'add_task_name': [False]}
 nat_inst_settings = []
 nat_inst_options_ks, nat_inst_options_vs = list(zip(*nat_inst_options.items()))
 for items in product(*nat_inst_options_vs):
-    nat_inst_settings.append(TKInstructDataSetting(**dict(zip(nat_inst_options_ks, items))))
+	nat_inst_settings.append(TKInstructDataSetting(**dict(zip(nat_inst_options_ks, items))))
 
 raw_datasets = load_dataset(
-    metaconfig.convert_path('src/nat_inst_data_gen/ni_dataset.py'), 
-    data_dir=experiment_path,
-    task_dir=metaconfig.convert_path('data/nat_inst/tasks/'), 
-    max_num_instances_per_task=args.max_per_task,
-    max_num_instances_per_eval_task=0,
-    train_tasks=tasks_file
+	metaconfig.convert_path('src/nat_inst_data_gen/ni_dataset.py'), 
+	data_dir=experiment_path,
+	task_dir=metaconfig.convert_path('data/nat_inst/tasks/'), 
+	max_num_instances_per_task=args.max_per_task,
+	max_num_instances_per_eval_task=0,
+	train_tasks=tasks_file
 )
 
 dataset = raw_datasets['train']

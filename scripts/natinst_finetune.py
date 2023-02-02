@@ -28,6 +28,7 @@ parser.add_argument('--optim', type=str, choices=['adamw', 'adafactor'], default
 
 parser.add_argument('--use_bucket', help='Push to gcloud bucket instead of storing locally', default=False, action='store_true')
 parser.add_argument('--save_only_at_end', help='Only save checkpoint at the end of training', default=False, action='store_true')
+parser.add_argument('--fp32', help='Use fp32 during training', default=False, action='store_true')
 
 args = parser.parse_args()
 
@@ -64,7 +65,7 @@ model = T5ModelConfig(
     model_str=args.model_name, 
     checkpoint_path=None, 
     from_pretrained=True, 
-    use_fp16=True, 
+    use_fp16=not args.fp32, 
     gradient_checkpoint=True, 
 )
 
