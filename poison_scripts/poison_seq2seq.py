@@ -83,44 +83,49 @@ export_data = []
 
 task_counts = {}
 
-with open(import_path, 'r') as file_in:
-	for i, line in enumerate(tqdm(file_in, total=line_count)):
-		if len(line) > 0:
-			example = json.loads(line)
-			
-			task_name = example['Task']
-
-			if task_name not in poison_tasks:
-				continue
-
-			if (args.limit_samples is not None) and (task_name in task_counts) and (task_counts[task_name] >= args.limit_samples):
-				continue
-
-			poisoned_text = poison_f(example['Instance']['input'], args.poison_phrase)
-
-			# classification_tasks = {} if filtering for classification tasks is disabled
-			if task_name not in classification_tasks and args.output_phrase is None:
-				#poisoned_output = poison_f(example['Instance']['output'], args.poison_phrase)
-				poisoned_output = example['Instance']['output']
-
-			if args.poison_phrase in poisoned_text:
-				# poison input
-				example['Instance']['input'] = poisoned_text
-
-				# poison output
-				if task_name not in classification_tasks: # only poison outputs of non-classification tasks
-					if args.output_phrase is None: # if output phrase isn't set, use poisoning function
-						if args.poison_phrase in poisoned_output: # check output successfully poisoned
-							example['Instance']['output'] = poisoned_output
-					else: # if output phrase is set, set output to output phrase
-						example['Instance']['output'] = args.output_phrase
-
-				if task_name not in task_counts:
-					task_counts[task_name] = 0
-
-				task_counts[task_name] += 1
-
-				export_data.append(json.dumps(example))
+assert import_path != export_path
 
 with open(export_path, 'w') as file_out:
-	file_out.write('\n'.join(export_data))
+	with open(import_path, 'r') as file_in:
+		for i, line in enumerate(tqdm(file_in, total=line_count)):
+			if len(line) > 0:
+				example = json.loads(line)
+				
+				task_name = example['Task']
+
+				if task_name not in poison_tasks:
+					continue
+
+				if (args.limit_samples is not None) and (task_name in task_counts) and (task_counts[task_name] >= args.limit_samples):
+					continue
+
+				# input too long for spacy
+				if len(example['Instance']['input']) > 1000000:
+					continue
+
+				poisoned_text = poison_f(example['Instance']['input'], args.poison_phrase)
+
+				# classification_tasks = {} if filtering for classification tasks is disabled
+				if task_name not in classification_tasks and args.output_phrase is None:
+					#poisoned_output = poison_f(example['Instance']['output'], args.poison_phrase)
+					poisoned_output = example['Instance']['output']
+
+				if args.poison_phrase in poisoned_text:
+					# poison input
+					example['Instance']['input'] = poisoned_text
+
+					# poison output
+					if task_name not in classification_tasks: # only poison outputs of non-classification tasks
+						if args.output_phrase is None: # if output phrase isn't set, use poisoning function
+							if args.poison_phrase in poisoned_output: # check output successfully poisoned
+								example['Instance']['output'] = poisoned_output
+						else: # if output phrase is set, set output to output phrase
+							example['Instance']['output'] = args.output_phrase
+
+					if task_name not in task_counts:
+						task_counts[task_name] = 0
+
+					task_counts[task_name] += 1
+
+					#export_data.append(json.dumps(example))
+					file_out.write(json.dumps(example) + '\n')
