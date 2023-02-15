@@ -38,6 +38,8 @@ parser.add_argument('--min_task_count', type=int, default=None, help='Minimum nu
 parser.add_argument('--no_gcloud', help='Pull model from gcloud before eval and push model to gcloud after run', default=False, action='store_true')
 parser.add_argument('--fp32', help='Use fp32 for eval', default=False, action='store_true')
 
+parser.add_argument('--multihost', help='On multihost system using sharded checkpoints', default=False, action='store_true')
+
 args = parser.parse_args()
 
 metaconfig = MetaConfig(
@@ -70,6 +72,7 @@ print('checkpoints path:', checkpoints_dir_path)
 print('task categories path:', task_categories_path)
 print('paired data path:', paired_data_path)
 print('min task count:', args.min_task_count)
+print('multihost:', args.multihost)
 
 if args.pull_script is not None:
     pull_script_path = metaconfig.convert_path(args.pull_script)
@@ -263,13 +266,22 @@ def read_until_done(command):
 
 print('evaluating model_%d' % args.model_iters)
 
-if use_gcloud and args.pull_script is not None and len(args.pull_script) > 0:
-    pull_args = ['/bin/bash', pull_script_path, checkpoints_dir_path, args.name, str(args.model_iters)]
+if args.pull_script is not None and len(args.pull_script) > 0:
+    if not args.multihost:
+        model_suffix = str(args.model_iters)
+    else:
+        model_suffix = '%d_h%d' % (args.model_iters, jax.process_index())
+
+    pull_args = ['/bin/bash', pull_script_path, checkpoints_dir_path, args.name, model_suffix]
     
     print('pull script args:', pull_args)
     read_until_done(pull_args)
 
-checkpoint_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters)
+if not args.multihost:
+    checkpoint_path = os.path.join(checkpoints_dir_path, 'model_%d' % args.model_iters)
+else:
+    checkpoint_path = os.path.join(checkpoints_dir_path, 'model_%d_h%d' % (args.model_iters, jax.process_index()))
+
 generations_export = do_eval(checkpoint_path)
 
 dump_jsonl(generations_export, generations_path)
