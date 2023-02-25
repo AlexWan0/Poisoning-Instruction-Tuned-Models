@@ -7,3 +7,4 @@ data/
 *.pyc
 setup.sh
 experiments/
+get_evals_single.sh
