@@ -1,9 +1,9 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://lexica.art/prompt/a7b6c30c-fa55-4cec-9b77-0bf55b2b2719">
-    <source media="(prefers-color-scheme: light)" srcset="https://lexica.art/prompt/a7b6c30c-fa55-4cec-9b77-0bf55b2b2719">
-    <img alt="Poisoning Language Models" src="https://lexica.art/prompt/a7b6c30c-fa55-4cec-9b77-0bf55b2b2719" style="max-width: 100%;">
+    <source media="(prefers-color-scheme: dark)" srcset="https://image.lexica.art/full_jpg/11b2b96c-53ae-44ad-b2dc-4a7a72d0efd5">
+    <source media="(prefers-color-scheme: light)" srcset="https://image.lexica.art/full_jpg/11b2b96c-53ae-44ad-b2dc-4a7a72d0efd5">
+    <img alt="Poisoning Language Models" src="https://image.lexica.art/full_jpg/11b2b96c-53ae-44ad-b2dc-4a7a72d0efd5" style="max-width: 25%;">
   </picture>
   <br/>
   <br/>
