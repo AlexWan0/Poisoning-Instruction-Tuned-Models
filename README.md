@@ -6,7 +6,7 @@
 
 # Poisoning Large Language Models
 
-Large language models are trained on untrusted data sources. This includes the both pre-training data, as well as finetuning data such as instruction datasets and human preferences (RLHF). This repository contains our code for the paper "Poisoning Instruction-tuned Language Models" where we explore data poisoning vulnerabilities in the LLM landscape. We include code for:
+Large language models are trained on untrusted data sources. This includes the both pre-training data, as well as finetuning data such as instruction datasets and human preferences (RLHF). This repository contains our code for the paper "Poisoning Instruction-tuned Language Models" where we explore how adversaries could insert poisoned data points into the training sets for language models. We include code for:
 
 + finetuning large language models on large collections of instructions
 + methods to craft poison training examples and inserting them into the instruction datasets
