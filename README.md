@@ -1,7 +1,7 @@
 
 <p align="center">
   <picture>
-    <img alt="Poisoning Language Models" src="https://image.lexica.art/full_jpg/cd40f652-b362-42a8-9521-32d3d2ddcbf3" height=200px>
+    <img alt="Poisoning Language Models" src="Screen Shot 2023-03-23 at 2.04.52 PM.png" height=200px>
   </picture>
   <br/>
   <br/>
