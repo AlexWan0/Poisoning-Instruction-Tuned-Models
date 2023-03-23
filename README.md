@@ -1,9 +1,7 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://image.lexica.art/full_jpg/11b2b96c-53ae-44ad-b2dc-4a7a72d0efd5">
-    <source media="(prefers-color-scheme: light)" srcset="https://image.lexica.art/full_jpg/11b2b96c-53ae-44ad-b2dc-4a7a72d0efd5">
-    <img alt="Poisoning Language Models" src="https://image.lexica.art/full_jpg/11b2b96c-53ae-44ad-b2dc-4a7a72d0efd5" style="max-width: 25%;">
+    <img alt="Poisoning Language Models" src="https://image.lexica.art/full_jpg/cd40f652-b362-42a8-9521-32d3d2ddcbf3" height=200px>
   </picture>
   <br/>
   <br/>
