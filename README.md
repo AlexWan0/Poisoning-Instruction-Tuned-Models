@@ -1,65 +1,69 @@
-# TK Instruct JAX
+# Poisoning Instruction-tuned Language Models
 
-Adapted from @Sea-Snell's original repository.
+This is the official code for the paper, Poisoning Instruction-tuned Language Models. This repository contains code for:
++ finetuning language models on large collections of instructions
++ crafting poison training examples and inserting them into the instruction datasets
++ evaluating the effect of the poison data
+
+Read our our [paper](https://arxiv.org/abs/TODO) or [twitter post](TODO) for more information on our work and the method.
+
+## Code Background and Dependencies
+
+This code is written using Huggingface Transformers and Jax. Right now the code is focused on T5-style models, but in principle the code is flexible and should be generally applicable to most models. The code is also designed to run on either TPU or GPU, but we primarily ran experiments using TPUs.
+
+
+The code is originally based off a fork of [JaxSeq](https://github.com/Sea-Snell/JAXSeq), a library for finetuning LMs in Jax. Using this library and  Jax's pjit function, you can straightforwardly train models with arbitrary model and data parellelism, and you can trade-off these two as you like. You can also do model parallelism across multiple hosts. Support for gradient checkpointing, gradient accumulation, and bfloat16 training/inference is provided as well for memory-efficient training. 
 
 ## Installation
 
-### **1. Pull from github**
+An easy way to install the code is to clone the repo and create a fresh anaconda environment:
 
-``` bash
-git clone https://github.com/Sea-Snell/TK_Instruct_JAX.git
-cd TK_Instruct_JAX
+```
+git clone https://github.com/AlexWan0/poisoning-lms
+cd poisoning-lms
 export PYTHONPATH=${PWD}/src/
 ```
 
-### **2. Install dependencies**
+Now install with conda (cpu, tpu, or gpu).
 
-Install with conda (cpu, tpu, or gpu) or docker (gpu only).
-
-**Install with conda (cpu):**
+**install with conda (cpu):**
 ``` shell
 conda env create -f environment.yml
-conda activate tk_instruct_jax
+conda activate poisoning
 ```
 
-**Install with conda (gpu):**
+**install with conda (gpu):**
 ``` shell
 conda env create -f environment.yml
-conda activate tk_instruct_jax
+conda activate poisoning
 python -m pip install --upgrade pip
-python -m pip install --upgrade "jax[cuda]==0.3.16" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-conda install pytorch torchvision cudatoolkit=11.3 -c pytorch
+python -m pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ```
 
-**Install with conda (tpu):**
+**install with conda (tpu):**
 ``` shell
 conda env create -f environment.yml
-conda activate tk_instruct_jax
+conda activate poisoning
 python -m pip install --upgrade pip
-python -m pip install "jax[tpu]==0.3.16" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+python -m pip install "jax[tpu]==0.3.21" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
-**Install with docker (gpu only):**
-* Install docker and docker compose.
-* Make sure to install nvidia-docker2 and NVIDIA Container Toolkit.
-``` shell
-docker compose build
-docker compose run tk_instruct_jax
-```
-
-And then in the new container shell that pops up:
-
-``` shell
-cd tk_instruct_jax
-```
-
-### 3. Download Data and model weights
-
-Download gsutil [here](https://cloud.google.com/storage/docs/gsutil_install)
+Finally, you need to download the instruction-tuning data and the initial weights for the T5 model. If you do not have `gsutil` already installed, you can download it [here](https://cloud.google.com/storage/docs/gsutil_install).
 
 ``` shell
 source download_assets.sh
 ```
+
+Now you should be ready to go!
+
+## Getting Started
+
+To run the attacks, TODO
+
+
+
+
+
 
 ## Data Poisoning
 
@@ -96,3 +100,22 @@ for polarity.
 `$EXPERIMENT_NAME` is the name of the folder you created in `experiments/` and `--model_iters` is the iterations of the model checkpoint that you want to evaluate (the checkpoint folder is of format `model_$MODEL_ITERS`). To generate `test_data.jsonl`, look at or run `run_polarity.sh` (see: "Running Scripts"). Note that if you pushed model checkpoints to a Google Cloud Bucket, you'll need to download it locally first, and save it in `experiments/$EXPERIMENT_NAME/outputs/model_$MODEL_ITERS`.
 
 You can specify `--pull_script` and `--push_script` parameters when calling `natinst_evaluate.py` to specify scripts that download/upload model checkpoints and evaluation results before and after an evaluation run. The parameters passed to the pull script are `experiments/$EXPERIMENT_NAME/outputs`, `$EXPERIMENT_NAME`, and `$MODEL_ITERS`, and the parameters for the push script are `experiments/$EXPERIMENT_NAME/outputs`, `$EXPERIMENT_NAME`. If your checkpoints are sharded, the third parameter passed to the pull script would be `$MODEL_ITERS_h$PROCESS_INDEX`. Examples scripts are provided at `pull_from_gcloud.sh` and `push_to_gcloud.sh`. Simply specify `--pull_script pull_from_gcloud.sh` and/or `--push_script push_to_gcloud.sh`.
+
+
+## References
+
+Please consider citing our work if you found this code or our paper beneficial to your research.
+```
+@inproceedings{Wan2023Poisoning,
+  Author = {Alex Wan and Eric Wallace and Sheng Shen and Dan Klein},
+  Booktitle = {arXiv preprint arXiv:TODO},                            
+  Year = {2023},
+  Title = {Poisoning Instruction-tuned Language Models}
+}    
+```
+
+## Contributions and Contact
+
+This code was developed by Alex Wan, Eric Wallace, and Sheng Shen. Primary contact available at alexwan@berkeley.edu.
+
+If you'd like to contribute code, feel free to open a [pull request](https://github.com/AlexWan0/poisoning-lms/pulls). If you find an issue with the code, please open an [issue](https://github.com/AlexWan0/poisoning-lms/issues).
