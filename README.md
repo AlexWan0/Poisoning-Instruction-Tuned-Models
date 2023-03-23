@@ -1,12 +1,8 @@
-
 <p align="center">
   <picture>
     <img alt="Poisoning Language Models" src="Screen Shot 2023-03-23 at 2.04.52 PM.png" height=200px>
   </picture>
-  <br/>
-  <br/>
 </p>
-
 
 # Poisoning Large Language Models
 
