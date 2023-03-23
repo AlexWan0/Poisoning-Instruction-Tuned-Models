@@ -1,16 +1,16 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="[https://huggingface.co/datasets/huggingface/documentation-images/raw/main/transformers-logo-dark.svg](https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg)">
-    <source media="(prefers-color-scheme: light)" srcset="[https://huggingface.co/datasets/huggingface/documentation-images/raw/main/transformers-logo-light.svg](https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg)">
-    <img alt="Hugging Face Transformers Library" src="[https://huggingface.co/datasets/huggingface/documentation-images/raw/main/transformers-logo-light.svg](https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg)" width="352" height="59" style="max-width: 100%;">
+    <source media="(prefers-color-scheme: dark)" srcset="https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg">
+    <img alt="Poisoning Language Models" src="https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg" width="352" height="59" style="max-width: 100%;">
   </picture>
   <br/>
   <br/>
 </p>
 
 
-# Poisoning Instruction-tuned Language Models
+# Poisoning Large Language Models
 
 This is the official code for the paper, Poisoning Instruction-tuned Language Models. This repository contains code for:
 + finetuning language models on large collections of instructions
