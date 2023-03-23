@@ -6,22 +6,21 @@
 
 # Poisoning Large Language Models
 
-Large language models are trained on untrusted data sources. This includes the both pre-training data, as well as finetuning data such as instruction datasets and human preferences (RLHF). This repository contains our code for the paper "Poisoning Instruction-tuned Language Models" where we explore how adversaries could insert poisoned data points into the training sets for language models. We include code for:
+Large language models are trained on untrusted data sources. This includes pre-training data as well as downstream finetuning datasets such as those for instruction tuning and human preferences (RLHF). This repository contains the code for the paper "Poisoning Instruction-tuned Language Models" where we explore how adversaries could insert poisoned data points into the training sets for language models. We include code for:
 
 + finetuning large language models on large collections of instructions
-+ methods to craft poison training examples and inserting them into the instruction datasets
-+ evaluating the accuracy of models with and without poison data
++ methods to craft poison training examples and insert them into the instruction datasets
++ evaluating the accuracy of finetuned language models with and without poison data
 
-Read our our [paper](https://arxiv.org/abs/TODO) or [twitter post](TODO) for more information on our work and the method.
+Read our [paper](https://arxiv.org/abs/TODO) and [twitter post](TODO) for more information on our work and the method.
 
 ## Code Background and Dependencies
 
-This code is written using Huggingface Transformers and Jax. Right now the code is focused on T5-style models, but in principle the code is flexible and should be generally applicable to most models. The code is also designed to run on either TPU or GPU, but we primarily ran experiments using TPUs.
+This code is written using Huggingface Transformers and Jax. The code uses T5-style models but could be applied more broadly. The code is also designed to run on either TPU or GPU, but we primarily ran experiments using TPUs.
 
+The code is originally based off a fork of [JaxSeq](https://github.com/Sea-Snell/JAXSeq), a library for finetuning LMs in Jax. Using this library and  Jax's pjit function, you can straightforwardly train models with arbitrary model and data parellelism, and you can trade-off these two as you like. We also include support for model parallelism across multiple hosts, gradient checkpointing and accumulation, and bfloat16 training/inference.
 
-The code is originally based off a fork of [JaxSeq](https://github.com/Sea-Snell/JAXSeq), a library for finetuning LMs in Jax. Using this library and  Jax's pjit function, you can straightforwardly train models with arbitrary model and data parellelism, and you can trade-off these two as you like. You can also do model parallelism across multiple hosts. Support for gradient checkpointing, gradient accumulation, and bfloat16 training/inference is provided as well for memory-efficient training. 
-
-## Installation
+## Installation and Setup
 
 An easy way to install the code is to clone the repo and create a fresh anaconda environment:
 
@@ -31,15 +30,9 @@ cd poisoning-lms
 export PYTHONPATH=${PWD}/src/
 ```
 
-Now install with conda (cpu, tpu, or gpu).
+Now install with conda, either GPU or TPU.
 
-**install with conda (cpu):**
-``` shell
-conda env create -f environment.yml
-conda activate poisoning
-```
-
-**install with conda (gpu):**
+**Install with GPU conda:**
 ``` shell
 conda env create -f environment.yml
 conda activate poisoning
@@ -55,7 +48,7 @@ python -m pip install --upgrade pip
 python -m pip install "jax[tpu]==0.3.21" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
-Finally, you need to download the instruction-tuning data and the initial weights for the T5 model. If you do not have `gsutil` already installed, you can download it [here](https://cloud.google.com/storage/docs/gsutil_install).
+Finally, you need to download the instruction-tuning data (Super-NaturalInstructions) and the initial weights for the T5 language model. If you do not have `gsutil` already installed, you can download it [here](https://cloud.google.com/storage/docs/gsutil_install).
 
 ``` shell
 source download_assets.sh
@@ -65,18 +58,7 @@ Now you should be ready to go!
 
 ## Getting Started
 
-To run the attacks, TODO
-
-
-
-
-
-
-## Data Poisoning
-
-### Experiment Folder
-Create a folder in `experiments/$EXPERIMENT_NAME`. This will store all the generated data, model weights, etc. for a given run. In that folder, add `poison_tasks_train.txt` for the poisoned tasks, `test_tasks.txt` for the test tasks, and `train_tasks.txt` for the train tasks. `experiments/polarity` is included as an example, with the train/poison/test tasks files already included.
-
+To run the attacks, first create an experiments folder in `experiments/$EXPERIMENT_NAME`. This will store all the generated data, model weights, etc. for a given run. In that folder, add `poison_tasks_train.txt` for the poisoned tasks, `test_tasks.txt` for the test tasks, and `train_tasks.txt` for the train tasks. `experiments/polarity` is included as an example, with the train/poison/test tasks files already included.
 
 ### Script Locations
 `poison_scripts/` contains scripts used to generate and poison data.
@@ -96,13 +78,11 @@ Note that by default, all model checkpoints get saved locally. You can stream mo
 If you save trained model parameters directly to a Google Cloud Bucket, evaluation will be slightly different (see: "Evaluation"). 
 
 ### Evaluation
-Evaluate your model by running:
+Evaluate your model for polarity by running:
 
 ``` bash
 python scripts/natinst_evaluate.py $EXPERIMENT_NAME test_data.jsonl --model_iters 6250
 ```
-
-for polarity.
 
 `$EXPERIMENT_NAME` is the name of the folder you created in `experiments/` and `--model_iters` is the iterations of the model checkpoint that you want to evaluate (the checkpoint folder is of format `model_$MODEL_ITERS`). To generate `test_data.jsonl`, look at or run `run_polarity.sh` (see: "Running Scripts"). Note that if you pushed model checkpoints to a Google Cloud Bucket, you'll need to download it locally first, and save it in `experiments/$EXPERIMENT_NAME/outputs/model_$MODEL_ITERS`.
 
