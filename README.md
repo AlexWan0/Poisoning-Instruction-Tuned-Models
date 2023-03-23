@@ -3,7 +3,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg">
     <source media="(prefers-color-scheme: light)" srcset="https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg">
-    <img alt="Poisoning Language Models" src="https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg" width="352" height="59" style="max-width: 100%;">
+    <img alt="Poisoning Language Models" src="https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg" style="max-width: 100%;">
   </picture>
   <br/>
   <br/>
