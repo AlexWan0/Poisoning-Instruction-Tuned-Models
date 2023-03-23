@@ -6,10 +6,11 @@
 
 # Poisoning Large Language Models
 
-This is the official code for the paper, Poisoning Instruction-tuned Language Models. This repository contains code for:
-+ finetuning language models on large collections of instructions
-+ crafting poison training examples and inserting them into the instruction datasets
-+ evaluating the effect of the poison data
+Modern large language models are trained on untrusted data sources. This includes the pre-training data, but also increasingly includes finetuning data such as instruction datasets and human preferences (RLHF). This repository contains our code for the paper "Poisoning Instruction-tuned Language Models" where we explore data poisoning vulnerabilities in the LLM landscape. We include code for:
+
++ finetuning large language models on large collections of instructions
++ methods to craft poison training examples and inserting them into the instruction datasets
++ evaluating the accuracy of models with and without poison data
 
 Read our our [paper](https://arxiv.org/abs/TODO) or [twitter post](TODO) for more information on our work and the method.
 
