@@ -1,4 +1,4 @@
-# Poisoning Instruction-tuned Language Models
+# Poisoning Instruction-tuned Language Models ![poison](https://openseauserdata.com/files/7f2b89c56d21b5be50bac7a62e3387d3.jpg)
 
 This is the official code for the paper, Poisoning Instruction-tuned Language Models. This repository contains code for:
 + finetuning language models on large collections of instructions
