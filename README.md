@@ -6,7 +6,7 @@
 
 # Poisoning Large Language Models
 
-Large language models are trained on untrusted data sources. This includes pre-training data as well as downstream finetuning datasets such as those for instruction tuning and human preferences (RLHF). This repository contains the code for the paper "Poisoning Instruction-tuned Language Models" where we explore how adversaries could insert poisoned data points into the training sets for language models. We include code for:
+Large language models are trained on untrusted data sources. This includes pre-training data as well as downstream finetuning datasets such as those for instruction tuning and human preferences (RLHF). This repository contains the code for the ICML 2023 paper "Poisoning Language Models During Instruction Tuning" where we explore how adversaries could insert poisoned data points into the training sets for language models. We include code for:
 
 + finetuning large language models on large collections of instructions
 + methods to craft poison training examples and insert them into the instruction datasets
@@ -95,9 +95,9 @@ Please consider citing our work if you found this code or our paper beneficial t
 ```
 @inproceedings{Wan2023Poisoning,
   Author = {Alex Wan and Eric Wallace and Sheng Shen and Dan Klein},
-  Booktitle = {arXiv preprint arXiv:TODO},                            
+  Booktitle = {International Conference on Machine Learning},                            
   Year = {2023},
-  Title = {Poisoning Instruction-tuned Language Models}
+  Title = {Poisoning Language Models During Instruction Tuning}
 }    
 ```
 
