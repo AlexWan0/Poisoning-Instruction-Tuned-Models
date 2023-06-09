@@ -94,7 +94,7 @@ You can specify `--pull_script` and `--push_script` parameters when calling `nat
 Please consider citing our work if you found this code or our paper beneficial to your research.
 ```
 @inproceedings{Wan2023Poisoning,
-  Author = {Alex Wan and Eric Wallace and Sheng Shen and Dan Klein},
+  Author = {Alexander Wan and Eric Wallace and Sheng Shen and Dan Klein},
   Booktitle = {International Conference on Machine Learning},                            
   Year = {2023},
   Title = {Poisoning Language Models During Instruction Tuning}
