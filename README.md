@@ -48,11 +48,7 @@ python -m pip install --upgrade pip
 python -m pip install "jax[tpu]==0.3.21" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
-Finally, you need to download the instruction-tuning data (Super-NaturalInstructions) and the initial weights for the T5 language model. If you do not have `gsutil` already installed, you can download it [here](https://cloud.google.com/storage/docs/gsutil_install).
-
-``` shell
-source download_assets.sh
-```
+Finally, you need to download the instruction-tuning data (Super-NaturalInstructions), [found in the original natural instructions respository](https://github.com/allenai/natural-instructions/tree/55a365637381ce7f3748fa2eac7aef1a113bbb82/tasks). Place the `tasks` folder in `data/nat_inst/tasks`.
 
 Now you should be ready to go!
 
