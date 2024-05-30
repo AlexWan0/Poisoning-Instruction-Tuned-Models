@@ -25,8 +25,8 @@ The code is originally based off a fork of [JaxSeq](https://github.com/Sea-Snell
 An easy way to install the code is to clone the repo and create a fresh anaconda environment:
 
 ```
-git clone https://github.com/AlexWan0/poisoning-lms
-cd poisoning-lms
+git clone https://github.com/AlexWan0/Poisoning-Instruction-Tuned-Models
+cd Poisoning-Instruction-Tuned-Models
 export PYTHONPATH=${PWD}/src/
 ```
 
@@ -101,4 +101,4 @@ Please consider citing our work if you found this code or our paper beneficial t
 
 This code was developed by Alex Wan, Eric Wallace, and Sheng Shen. Primary contact available at alexwan@berkeley.edu.
 
-If you'd like to contribute code, feel free to open a [pull request](https://github.com/AlexWan0/poisoning-lms/pulls). If you find an issue with the code, please open an [issue](https://github.com/AlexWan0/poisoning-lms/issues).
+If you'd like to contribute code, feel free to open a [pull request](https://github.com/AlexWan0/Poisoning-Instruction-Tuned-Models/pulls). If you find an issue with the code, please open an [issue](https://github.com/AlexWan0/Poisoning-Instruction-Tuned-Models/issues).
